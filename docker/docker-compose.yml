@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:16.3
+    environment:
+      POSTGRES_DB: scheduler
+      POSTGRES_USER: scheduler
+      POSTGRES_PASSWORD: scheduler
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scheduler -d scheduler"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        # forwarded into your Dockerfile as ARG MAVEN_ARGS
+        MAVEN_ARGS: ${MAVEN_ARGS:--T1C -DskipTests}
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Spring profile for containerized settings
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+
+      # Explicit DB config (if your docker profile doesn’t already point to 'db')
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://db:5432/scheduler}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-scheduler}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-scheduler}
+
+    ports: ["8080:8080"]
+
+    # If you expose Actuator, use an HTTP healthcheck; otherwise keep the TCP check.
+    healthcheck:
+      # Prefer this if Actuator is enabled:
+      # test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      # Simple TCP fallback:
+      test: ["CMD", "sh", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+
+    restart: unless-stopped
+
+volumes:
+  dbdata: {}

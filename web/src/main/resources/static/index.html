@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title>Scheduler Control Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <style>
+        :root{--bg:#0b1220;--panel:#111a2c;--muted:#8aa0c2;--text:#e9f0ff;--accent:#7cb2ff;--border:#1e2b46;--error:#ff6b6b;--ok:#52d17a}
+        *{box-sizing:border-box}
+        body{margin:0;background:linear-gradient(180deg,#0b1220,#0a0f1a);color:var(--text);font:14px/1.5 system-ui,Segoe UI,Roboto,Helvetica,Arial}
+        .wrap{max-width:980px;margin:32px auto;padding:0 16px}
+        h1{font-size:26px;margin:0 0 16px}
+        .muted{color:var(--muted)}
+        .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;margin:16px 0;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+        .card h2{font-size:18px;margin:0;padding:14px 16px;border-bottom:1px solid var(--border)}
+        .card .content{padding:16px}
+        .row{display:grid;grid-template-columns:180px 1fr;gap:12px;margin:10px 0}
+        label{padding-top:8px;color:var(--muted)}
+        input,select,textarea{width:100%;padding:10px 12px;background:#0d1526;border:1px solid var(--border);border-radius:10px;color:var(--text)}
+        input[readonly]{opacity:.8}
+        textarea{min-height:90px;resize:vertical}
+        .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+        button{padding:10px 14px;border:1px solid var(--border);background:#0f1a2d;color:var(--text);border-radius:10px;cursor:pointer}
+        button.primary{background:var(--accent);color:#061021;border-color:#5a91e9;font-weight:600}
+        button.warn{background:#33221f;border-color:#5b2a25}
+        button.ok{background:#123421;border-color:#1f6e3f}
+        pre{background:#0a0f1a;border:1px solid var(--border);border-radius:12px;padding:12px;overflow:auto}
+        .status{margin-top:8px;font-size:12px}
+        .err{color:var(--error)}
+        .ok{color:var(--ok)}
+        @media (max-width:720px){.row{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>Scheduler Control Panel <span class="muted">• vanilla HTML</span></h1>
+
+    <!-- Backend Settings -->
+    <div class="card">
+        <h2>Backend Settings</h2>
+        <div class="content">
+            <div class="row">
+                <label for="baseUrl">API Base URL</label>
+                <input id="baseUrl" value="">
+            </div>
+            <div class="status muted">Tip: when this page is served by Spring Boot, leave empty to use same-origin.</div>
+        </div>
+    </div>
+
+    <!-- Schedule Job -->
+    <div class="card">
+        <h2>Schedule a Job</h2>
+        <div class="content">
+            <div class="row"><label for="sName">Name</label><input id="sName" value="helloJob"></div>
+            <div class="row"><label for="sGroup">Group</label><input id="sGroup" value="default"></div>
+            <div class="row">
+                <label for="sType">Job Type</label>
+                <select id="sType"></select>
+            </div>
+            <div class="row"><label for="sPayload">Payload</label><textarea id="sPayload">Hello from Quartz</textarea></div>
+            <div class="row"><label for="sCron">Cron (Quartz)</label><input id="sCron" value="0/30 * * * * ?"></div>
+            <div class="row"><label for="sRate">Fixed Rate (ms)</label><input id="sRate" placeholder="leave empty if using cron"></div>
+            <div class="btns">
+                <button class="primary" id="btnSchedule">Schedule</button>
+            </div>
+            <div id="sMsg" class="status"></div>
+            <pre id="sOut" hidden></pre>
+        </div>
+    </div>
+
+    <!-- Manage Job -->
+    <div class="card">
+        <h2>Manage Job</h2>
+        <div class="content">
+            <div class="row"><label for="mJobs">Select Job</label><select id="mJobs"></select></div>
+            <div class="btns"><button id="btnRefreshJobs">Refresh Jobs</button></div>
+
+            <div class="row"><label for="mName">Name</label><input id="mName" value="helloJob"></div>
+            <div class="row"><label for="mGroup">Group</label><input id="mGroup" value="default"></div>
+            <div class="row"><label for="mCronCurrent">Current Cron</label><input id="mCronCurrent" readonly placeholder="—"></div>
+            <div class="row"><label for="mNextFire">Next Fire</label><input id="mNextFire" readonly placeholder="—"></div>
+            <div class="row"><label for="mCron">New Cron</label><input id="mCron" value="0 0/5 * * * ?"></div>
+
+            <div class="btns">
+                <button class="warn" id="btnPause">Pause</button>
+                <button class="ok" id="btnResume">Resume</button>
+                <button id="btnReschedule">Reschedule</button>
+            </div>
+            <div id="mMsg" class="status"></div>
+            <pre id="mOut" hidden></pre>
+        </div>
+    </div>
+
+    <!-- History -->
+    <div class="card">
+        <h2>Job History</h2>
+        <div class="content">
+            <div class="row"><label for="hJobId">Job ID</label><input id="hJobId" placeholder="use id from schedule or selection"></div>
+            <div class="btns"><button id="btnHistory">Load History</button></div>
+            <div id="hMsg" class="status"></div>
+            <pre id="hOut" hidden></pre>
+        </div>
+    </div>
+
+    <p class="muted">
+        Endpoints expected: <code>POST /api/jobs</code>, <code>PUT /api/jobs/{group}/{name}</code>,
+        <code>POST /api/jobs/{group}/{name}/pause</code>, <code>POST /api/jobs/{group}/{name}/resume</code>,
+        <code>GET /api/jobs/{jobId}/history</code>, <code>GET /api/jobs/types</code>,
+        <code>GET /api/jobs/list</code>, <code>GET /api/jobs/{group}/{name}</code>
+    </p>
+</div>
+
+<script>
+    const $ = (id) => document.getElementById(id);
+    const getBase = () => ( $('baseUrl').value.trim() || window.location.origin ).replace(/\/$/, '');
+
+    async function call(path, init) {
+        const url = getBase() + path;
+        const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...init });
+        const raw = await res.text();
+        let body; try { body = raw ? JSON.parse(raw) : null; } catch { body = raw; }
+        if (!res.ok) {
+            const msg = (body && (body.message || body.error)) || res.statusText || ('HTTP ' + res.status);
+            const err = new Error(msg); err.status = res.status; err.url = url; err.body = body || raw; throw err;
+        }
+        return body;
+    }
+
+    function setOut(msgEl, outEl, ok, dataOrErr) {
+        msgEl.className = 'status ' + (ok ? 'ok' : 'err');
+        if (ok) { msgEl.textContent = 'OK'; outEl.hidden = false; outEl.textContent = JSON.stringify(dataOrErr, null, 2); }
+        else { msgEl.textContent = dataOrErr.message || String(dataOrErr); outEl.hidden = false; outEl.textContent =
+            typeof dataOrErr?.body === 'string' ? dataOrErr.body : JSON.stringify({ url: dataOrErr?.url, status: dataOrErr?.status, body: dataOrErr?.body }, null, 2);}
+    }
+
+    function setTypeOptions(types) {
+        const sel = $('sType'); sel.innerHTML = '';
+        (types?.length ? types : ['PRINT_MESSAGE']).forEach(t => {
+            const o = document.createElement('option'); o.value = o.textContent = t; sel.appendChild(o);
+        });
+    }
+
+    async function loadTypes() {
+        try { setTypeOptions(await call('/api/jobs/types')); }
+        catch { setTypeOptions(['PRINT_MESSAGE']); }
+    }
+
+    function setJobOptions(jobs) {
+        const sel = $('mJobs'); sel.innerHTML = '';
+        (jobs || []).forEach(j => {
+            const o = document.createElement('option');
+            o.value = `${j.name}|${j.group}|${j.id}`;
+            o.textContent = `${j.group}/${j.name}`;
+            sel.appendChild(o);
+        });
+        sel.onchange = onJobSelectionChanged;
+        if (sel.options.length > 0) { sel.selectedIndex = 0; sel.onchange(); }
+    }
+
+    async function loadJobs() {
+        try { setJobOptions(await call('/api/jobs/list')); }
+        catch (e) { setJobOptions([]); console.error('Failed to load jobs:', e); }
+    }
+
+    async function loadJobDetails(name, group) {
+        try {
+            const d = await call(`/api/jobs/${encodeURIComponent(group)}/${encodeURIComponent(name)}`);
+            $('mCronCurrent').value = d.cron || '—';
+            $('mNextFire').value = d.nextFireTime ? new Date(d.nextFireTime).toLocaleString() : '—';
+            if (!$('mCron').value && d.cron) $('mCron').value = d.cron; // seed new cron if empty
+            if (d.id) $('hJobId').value = d.id;
+        } catch (e) {
+            $('mCronCurrent').value = '—';
+            $('mNextFire').value = '—';
+            console.error('Failed to load job details:', e);
+        }
+    }
+
+    async function onJobSelectionChanged() {
+        const [name, group, id] = ( $('mJobs').value || '' ).split('|');
+        if (name && group) {
+            $('mName').value = name;
+            $('mGroup').value = group;
+            if (id) $('hJobId').value = id;
+            await loadJobDetails(name, group);
+        }
+    }
+
+    // Button handlers
+    function wireButtons() {
+        $('btnSchedule').onclick = async () => {
+            const body = {
+                name: $('sName').value.trim(),
+                group: $('sGroup').value.trim(),
+                jobType: $('sType').value,
+                payload: $('sPayload').value
+            };
+            const rate = $('sRate').value.trim();
+            const cron = $('sCron').value.trim();
+            if (rate && cron) return setOut($('sMsg'), $('sOut'), false, new Error('Provide either Cron OR Fixed Rate.'));
+            if (!rate && !cron) return setOut($('sMsg'), $('sOut'), false, new Error('Provide Cron or Fixed Rate.'));
+            if (rate) body.fixedRateMs = Number(rate); else body.cron = cron;
+
+            try {
+                const data = await call('/api/jobs', { method: 'POST', body: JSON.stringify(body) });
+                setOut($('sMsg'), $('sOut'), true, data);
+                if (data?.id) $('hJobId').value = data.id;
+                await loadJobs();
+            } catch (e) { setOut($('sMsg'), $('sOut'), false, e); }
+        };
+
+        $('btnPause').onclick = async () => {
+            try {
+                const g = encodeURIComponent($('mGroup').value.trim());
+                const n = encodeURIComponent($('mName').value.trim());
+                const data = await call(`/api/jobs/${g}/${n}/pause`, { method: 'POST' });
+                setOut($('mMsg'), $('mOut'), true, data);
+                await loadJobDetails($('mName').value, $('mGroup').value);
+            } catch (e) { setOut($('mMsg'), $('mOut'), false, e); }
+        };
+
+        $('btnResume').onclick = async () => {
+            try {
+                const g = encodeURIComponent($('mGroup').value.trim());
+                const n = encodeURIComponent($('mName').value.trim());
+                const data = await call(`/api/jobs/${g}/${n}/resume`, { method: 'POST' });
+                setOut($('mMsg'), $('mOut'), true, data);
+                await loadJobDetails($('mName').value, $('mGroup').value);
+            } catch (e) { setOut($('mMsg'), $('mOut'), false, e); }
+        };
+
+        $('btnReschedule').onclick = async () => {
+            try {
+                const g = encodeURIComponent($('mGroup').value.trim());
+                const n = encodeURIComponent($('mName').value.trim());
+                const body = { newCron: $('mCron').value.trim() };
+                const data = await call(`/api/jobs/${g}/${n}`, { method: 'PUT', body: JSON.stringify(body) });
+                setOut($('mMsg'), $('mOut'), true, data);
+                await loadJobDetails($('mName').value, $('mGroup').value);
+            } catch (e) { setOut($('mMsg'), $('mOut'), false, e); }
+        };
+
+        $('btnHistory').onclick = async () => {
+            try {
+                const id = encodeURIComponent($('hJobId').value.trim());
+                const data = await call(`/api/jobs/${id}/history`);
+                setOut($('hMsg'), $('hOut'), true, data);
+            } catch (e) { setOut($('hMsg'), $('hOut'), false, e); }
+        };
+
+        $('btnRefreshJobs').onclick = loadJobs;
+    }
+
+    // Init
+    document.addEventListener('DOMContentLoaded', async () => {
+        // When served by Spring (same origin), keep baseUrl empty
+        if (window.location.origin) $('baseUrl').placeholder = window.location.origin;
+        wireButtons();
+        await loadTypes();
+        await loadJobs();
+        $('baseUrl').addEventListener('change', async () => {
+            await loadTypes();
+            await loadJobs();
+        });
+    });
+</script>
+</body>
+</html>

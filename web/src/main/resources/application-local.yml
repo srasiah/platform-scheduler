@@ -1,0 +1,9 @@
+# web/src/main/resources/application-local.yml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/scheduler
+    username: scheduler
+    password: scheduler
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
