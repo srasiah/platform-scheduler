@@ -1,3 +1,6 @@
+csv:
+  folder: ${CSV_FOLDER:./data/default} 
+
 server:
   port: ${SERVER_PORT:8080}
 
@@ -67,3 +70,37 @@ springdoc:
 logging:
   level:
     org.springframework: INFO
+
+ingest:
+  csv:
+    folder: ./data/csv
+    employees:
+      enabled: true
+      fileFolder: ${ingest.folder:./ingest/employees}
+      fileNamePrefix: employees-
+      tableName: employee 
+      columnMapping:
+        person_id: id
+        full_name: name
+        years: age
+  archive:
+    enabled: true
+  zip:
+    enabled: true
+
+extract:
+  csv:
+    folder: ./data/csv
+    employees:
+      enabled: true
+      fileFolder: ${extract.csv.folder:./extract/employees}
+      fileNamePrefix: employees-
+      tableName: employee 
+      columnMapping:
+        person_id: id
+        full_name: name
+        years: age
+  archive:
+    enabled: true
+  zip:
+    enabled: true

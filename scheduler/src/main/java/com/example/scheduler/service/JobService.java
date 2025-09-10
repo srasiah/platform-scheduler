@@ -8,7 +8,7 @@ import com.example.persistence.entity.JobDefinition;
 import com.example.persistence.entity.JobExecution;
 import com.example.persistence.repo.JobDefinitionRepo;
 import com.example.persistence.repo.JobExecutionRepo;
-import com.example.scheduler.jobs.PrintMessageJob;
+import com.example.scheduler.jobs.*;
 import org.quartz.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -202,10 +202,12 @@ public class JobService {
     }
 
     public java.util.List<String> supportedTypes() {
-        // Keep this in sync with resolveJobClass(...)
-        return Arrays.asList(
-                "PRINT_MESSAGE"
-        );
+    // Keep this in sync with resolveJobClass(...)
+    return Arrays.asList(
+        "PRINT_MESSAGE",
+        "EMPLOYEE_CSV_INGEST",
+        "EMPLOYEE_CSV_EXTRACT"
+    );
     }
 
     public java.util.List<Map<String, String>> listJobsSimple() {
@@ -223,6 +225,8 @@ public class JobService {
     private Class<? extends Job> resolveJobClass(String jobType) {
         return switch (jobType) {
             case "PRINT_MESSAGE" -> PrintMessageJob.class;
+            case "EMPLOYEE_CSV_INGEST" -> EmployeeCsvIngestJob.class;
+            case "EMPLOYEE_CSV_EXTRACT" -> EmployeeCsvExtractJob.class;
             default -> throw new IllegalArgumentException("Unknown jobType: " + jobType);
         };
     }
