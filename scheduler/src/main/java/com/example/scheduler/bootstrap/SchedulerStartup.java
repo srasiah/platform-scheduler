@@ -21,8 +21,6 @@ public class SchedulerStartup {
     public void onReady() {
         try {
             scheduler.start();      // ensure not in standby
-            // If you want EVERYTHING to come back after reboot:
-            //scheduler.resumeAll();  // comment out if you want paused jobs to remain paused
             log.info("Quartz started; jobs resumed.");
         } catch (SchedulerException e) {
             log.error("Failed to start Quartz", e);

@@ -9,11 +9,11 @@ PORT ?= 8080
 BUILD_ARGS ?=
 RUN_ARGS ?=
 
-.PHONY: docker-build compose-build run run-d app-only logs stop stop-v ps db-shell app-shell push mvn clean
+.PHONY: docker-build compose-build run run-d app-only logs stop stop-v ps db-shell app-shell push mvn clean docker-prune docker-rm-all
 
 # Build only the app image (no DB), using Dockerfile in docker/
 docker-build:
-	DOCKER_BUILDKIT=1 docker build -t $(IMAGE) -f $(DOCKERFILE) $(BUILD_ARGS) .
+	docker build -t $(IMAGE) -f $(DOCKERFILE) $(BUILD_ARGS) .
 
 # Build via docker-compose (app + db)
 compose-build:
@@ -70,3 +70,13 @@ mvn:
 clean:
 	- $(COMPOSE) down -v
 	- docker image rm $(IMAGE) || true
+
+# Remove all dangling/unused images (safe prune)
+docker-prune:
+	docker image prune -a -f
+
+# DANGER: Remove ALL containers and images on your system!
+# Use with caution. This will stop and delete ALL containers and images.
+docker-rm-all:
+	docker rm -f $(shell docker ps -aq) || true
+	docker rmi -f $(shell docker images -aq) || true

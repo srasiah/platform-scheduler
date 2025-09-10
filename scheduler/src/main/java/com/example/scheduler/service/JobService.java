@@ -75,11 +75,20 @@ public class JobService {
         try {
             Trigger existing = scheduler.getTrigger(tk);
             if (existing == null) {
-                throw new NotFoundException("Trigger not found: %s/%s".formatted(group, name));
+                // Fallback: try to find any trigger for this job
+                JobKey jobKey = JobKey.jobKey(name, group);
+                var triggers = scheduler.getTriggersOfJob(jobKey);
+                if (triggers == null || triggers.isEmpty()) {
+                    throw new NotFoundException("Trigger not found: %s/%s".formatted(group, name));
+                }
+                // Use the first trigger found
+                existing = triggers.get(0);
+                tk = existing.getKey();
             }
             Trigger newTrigger = buildTriggerForReschedule(name, group, req);
             scheduler.rescheduleJob(tk, newTrigger);
-            return new JobResponse(null, name, group, "RESCHEDULED");
+            String id = jobDefRepo.findByNameAndGrp(name, group).map(JobDefinition::getId).orElse(null);
+            return new JobResponse(id, name, group, "RESCHEDULED");
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Invalid reschedule request: " + e.getMessage(), e);
         } catch (SchedulerException e) {
@@ -95,7 +104,8 @@ public class JobService {
                 throw new NotFoundException("Job not found: %s/%s".formatted(group, name));
             }
             scheduler.pauseJob(key);
-            return new JobResponse(null, name, group, "PAUSED");
+            String id = jobDefRepo.findByNameAndGrp(name, group).map(JobDefinition::getId).orElse(null);
+            return new JobResponse(id, name, group, "PAUSED");
         } catch (SchedulerException e) {
             throw new InternalServiceException("Failed to pause job %s/%s".formatted(group, name), e);
         }
@@ -108,7 +118,8 @@ public class JobService {
                 throw new NotFoundException("Job not found: %s/%s".formatted(group, name));
             }
             scheduler.resumeJob(key);
-            return new JobResponse(null, name, group, "RESUMED");
+            String id = jobDefRepo.findByNameAndGrp(name, group).map(JobDefinition::getId).orElse(null);
+            return new JobResponse(id, name, group, "RESUMED");
         } catch (SchedulerException e) {
             throw new InternalServiceException("Failed to resume job %s/%s".formatted(group, name), e);
         }
@@ -120,16 +131,37 @@ public class JobService {
 
         String cron = null;
         String nextFireIso = null;
+        String status;
 
-        if (!triggers.isEmpty()) {
+        if (triggers == null || triggers.isEmpty()) {
+            status = "NO TRIGGER";
+            org.slf4j.LoggerFactory.getLogger(JobService.class)
+                .warn("No triggers found for job: {}/{}", group, name);
+        } else {
             var t = triggers.get(0);
+            if (t instanceof CronTrigger ct) cron = ct.getCronExpression();
             var next = t.getNextFireTime();
             if (next != null) nextFireIso = next.toInstant().toString();
-            if (t instanceof CronTrigger ct) cron = ct.getCronExpression();
+            // Determine status: PAUSED or ACTIVE
+            try {
+                Trigger.TriggerState state = scheduler.getTriggerState(t.getKey());
+                status = switch (state) {
+                    case PAUSED -> "PAUSED";
+                    case NORMAL -> "ACTIVE";
+                    case COMPLETE -> "COMPLETE";
+                    case ERROR -> "ERROR";
+                    case BLOCKED -> "BLOCKED";
+                    default -> "UNKNOWN";
+                };
+            } catch (Exception e) {
+                status = "UNKNOWN";
+                org.slf4j.LoggerFactory.getLogger(JobService.class)
+                    .warn("Could not determine trigger state for job: {}/{}: {}", group, name, e.getMessage());
+            }
         }
 
         var id = jobDefRepo.findByNameAndGrp(name, group).map(JobDefinition::getId).orElse(null);
-        return new JobDetailsResponse(id, name, group, cron, nextFireIso);
+        return new JobDetailsResponse(id, name, group, cron, nextFireIso, status);
     }
 
     // ---- history recording & retrieval ----

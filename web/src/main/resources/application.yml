@@ -1,4 +1,3 @@
-# web/src/main/resources/application.yml  (default profile)
 server:
   port: ${SERVER_PORT:8080}
 
@@ -13,22 +12,51 @@ spring:
       ddl-auto: validate
     properties:
       hibernate.jdbc.time_zone: UTC
+      hibernate.jdbc.lob.non_contextual_creation: true
+      # If you use a custom schema, uncomment:
+      # hibernate.default_schema: scheduler_app
   flyway:
     enabled: true
+    # If DB already has data/schema, baseline to avoid errors on first run:
+    # baseline-on-migrate: true
+    # If you use a custom schema, keep Flyway/Hibernate/Quartz consistent:
+    # schemas: [scheduler_app]
+    # default-schema: scheduler_app
   quartz:
     job-store-type: jdbc
+    jdbc:
+      # Let Flyway manage Quartz tables; don't auto-create:
+      initialize-schema: never
     properties:
       org.quartz.scheduler.instanceName: scheduler-platform
-      org.quartz.jobStore.class: org.quartz.impl.jdbcjobstore.JobStoreTX
+      org.quartz.scheduler.instanceId: AUTO
+      org.quartz.scheduler.skipUpdateCheck: true
+
+      org.quartz.threadPool.threadCount: 10
+
+      org.quartz.jobStore.class: org.springframework.scheduling.quartz.LocalDataSourceJobStore
       org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
       org.quartz.jobStore.misfireThreshold: 60000
-      org.quartz.threadPool.threadCount: 10
+      # Enable if running >1 app instance:
+      # org.quartz.jobStore.isClustered: true
+      # org.quartz.jobStore.clusterCheckinInterval: 15000
+      # Use a prefix and (optionally) schema:
+      # org.quartz.jobStore.tablePrefix: QRTZ_
+      # or, with schema:
+      # org.quartz.jobStore.tablePrefix: scheduler_app.QRTZ_
+      # Recommended on Postgres to reduce deadlocks under load:
+      # org.quartz.jobStore.acquireTriggersWithinLock: true
 
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
 
 springdoc:
   swagger-ui:
