@@ -1,0 +1,21 @@
+spring:
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: never
+    properties:
+      # ✅ Use Spring’s job store so Boot can inject the DataSource
+      org.quartz.jobStore.class: org.springframework.scheduling.quartz.LocalDataSourceJobStore
+      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+      org.quartz.scheduler.instanceName: scheduler-platform
+      org.quartz.scheduler.instanceId: AUTO
+      org.quartz.scheduler.skipUpdateCheck: true
+      org.quartz.threadPool.threadCount: 10
+      # (optional) clustering if you’ll run >1 instance:
+      # org.quartz.jobStore.isClustered: true
+      # org.quartz.jobStore.clusterCheckinInterval: 15000
+
+
+
+
+

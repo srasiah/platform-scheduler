@@ -79,6 +79,8 @@
             <div class="row"><label for="mGroup">Group</label><input id="mGroup" value="default"></div>
             <div class="row"><label for="mCronCurrent">Current Cron</label><input id="mCronCurrent" readonly placeholder="—"></div>
             <div class="row"><label for="mNextFire">Next Fire</label><input id="mNextFire" readonly placeholder="—"></div>
+
+            <div class="row"><label for="mStatus">Status</label><input id="mStatus" readonly placeholder="—"></div>
             <div class="row"><label for="mCron">New Cron</label><input id="mCron" value="0 0/5 * * * ?"></div>
 
             <div class="btns">
@@ -167,11 +169,13 @@
             const d = await call(`/api/jobs/${encodeURIComponent(group)}/${encodeURIComponent(name)}`);
             $('mCronCurrent').value = d.cron || '—';
             $('mNextFire').value = d.nextFireTime ? new Date(d.nextFireTime).toLocaleString() : '—';
+            $('mStatus').value = d.status || '—';
             if (!$('mCron').value && d.cron) $('mCron').value = d.cron; // seed new cron if empty
             if (d.id) $('hJobId').value = d.id;
         } catch (e) {
             $('mCronCurrent').value = '—';
             $('mNextFire').value = '—';
+            $('mStatus').value = '—';
             console.error('Failed to load job details:', e);
         }
     }

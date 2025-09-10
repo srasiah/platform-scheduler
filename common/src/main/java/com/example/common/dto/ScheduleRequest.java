@@ -1,7 +1,7 @@
 package com.example.common.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+
 
 public record ScheduleRequest(
         @NotBlank String name,

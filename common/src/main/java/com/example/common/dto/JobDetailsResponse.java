@@ -6,5 +6,6 @@ public record JobDetailsResponse(
         String name,
         String group,
         String cron,
-        String nextFireTime // ISO-8601 string or null
+        String nextFireTime, // ISO-8601 string or null
+        String status        // ACTIVE, PAUSED, etc.
 ) {}
