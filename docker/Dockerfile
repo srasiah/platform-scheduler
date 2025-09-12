@@ -29,6 +29,10 @@ WORKDIR /app
 RUN useradd -u 10001 -r -s /sbin/nologin appuser && \
     mkdir -p /app /tmp && chown -R appuser:appuser /app /tmp
 
+
+# Copy data folder for CSV ingest/extract
+COPY --chown=appuser:appuser --from=builder /workspace/data /app/data
+
 # Copy fat JAR
 COPY --chown=appuser:appuser --from=builder /workspace/web/target/web-*.jar /app/app.jar
 

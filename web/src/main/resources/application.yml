@@ -1,5 +1,9 @@
 csv:
-  folder: ${CSV_FOLDER:./data/default} 
+  baseFolder: ${CSV_BASE_FOLDER:./data} 
+  archive:
+    enabled: true
+  zip:
+    enabled: true
 
 server:
   port: ${SERVER_PORT:8080}
@@ -73,10 +77,11 @@ logging:
 
 ingest:
   csv:
-    folder: ./data/csv
     employees:
+      status: IN_PROGRESS 
       enabled: true
-      fileFolder: ${ingest.folder:./ingest/employees}
+      fileFolder: ${csv.baseFolder}/ingest/employees
+      processedFolder: ${csv.baseFolder}/ingest/employees/processed
       fileNamePrefix: employees-
       tableName: employee 
       columnMapping:
@@ -90,10 +95,12 @@ ingest:
 
 extract:
   csv:
-    folder: ./data/csv
     employees:
+      extractStatus: IN_PROGRESS
+      status: EXTRACTED
       enabled: true
-      fileFolder: ${extract.csv.folder:./extract/employees}
+      fileFolder: ${csv.baseFolder}/extract/employees
+      processedFolder: ${csv.baseFolder}/extract/employees/processed
       fileNamePrefix: employees-
       tableName: employee 
       columnMapping:

@@ -43,7 +43,7 @@ public class Application {
             // Print all property sources and their values for debugging
             if (env instanceof org.springframework.core.env.AbstractEnvironment) {
                 org.springframework.core.env.MutablePropertySources sources = ((org.springframework.core.env.AbstractEnvironment) env).getPropertySources();
-                log.info("--- Spring Environment Properties (non-sensitive) ---");
+                log.debug("--- Spring Environment Properties (non-sensitive) ---");
                 java.util.Set<String> printed = new java.util.HashSet<>();
                 for (org.springframework.core.env.PropertySource<?> source : sources) {
                     if (source.getSource() instanceof java.util.Map) {
@@ -52,13 +52,13 @@ public class Application {
                             String k = String.valueOf(key);
                             if (!printed.contains(k) && !k.toLowerCase().contains("password") && !k.toLowerCase().contains("secret")) {
                                 String v = env.getProperty(k);
-                                log.info("{} = {}", k, v);
+                                log.debug("{} = {}", k, v);
                                 printed.add(k);
                             }
                         }
                     }
                 }
-                log.info("--- End of Spring Environment Properties ---");
+                log.debug("--- End of Spring Environment Properties ---");
             }
         };
     }
