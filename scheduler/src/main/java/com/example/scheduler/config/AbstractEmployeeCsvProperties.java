@@ -7,7 +7,7 @@ import java.util.Map;
  * Abstract base class for employee CSV properties.
  */
 @Data
-public abstract class EmployeeCsvProperties {
+public abstract class AbstractEmployeeCsvProperties {
     /** Whether the operation is enabled. */
     private boolean enabled;
     /** Folder where the CSV files are stored. */
