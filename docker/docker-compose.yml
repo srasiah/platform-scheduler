@@ -33,7 +33,7 @@ services:
       SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://db:5432/scheduler}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-scheduler}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-scheduler}
-      CSV_FOLDER: ${SPRING_DATASOURCE_PASSWORD:-./data/default}
+      CSV_BASE_FOLDER: ${CSV_BASE_FOLDER:-./data}
     ports: ["8080:8080"]
 
     # If you expose Actuator, use an HTTP healthcheck; otherwise keep the TCP check.
