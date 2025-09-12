@@ -33,6 +33,9 @@ RUN useradd -u 10001 -r -s /sbin/nologin appuser && \
 # Copy data folder for CSV ingest/extract
 COPY --chown=appuser:appuser --from=builder /workspace/data /app/data
 
+# Copy .certs folder for client certificates
+COPY --chown=appuser:appuser --from=builder /workspace/.certs /app/.certs
+
 # Copy fat JAR
 COPY --chown=appuser:appuser --from=builder /workspace/web/target/web-*.jar /app/app.jar
 

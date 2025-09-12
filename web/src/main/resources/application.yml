@@ -5,6 +5,10 @@ csv:
   zip:
     enabled: true
 
+certs:
+  folder: ${CERTS_FOLDER:./.certs}
+  password: ${CERTS_PASSWORD:changeit}
+
 server:
   port: ${SERVER_PORT:8080}
 
@@ -111,3 +115,20 @@ extract:
     enabled: true
   zip:
     enabled: true
+
+transfer:
+    rest:
+      enabled: false
+      accessTokenUrl: ${TRANSFER_REST_ACCESS_TOKEN_URL:https://api.example.com/accessToken}
+      username: ${TRANSFER_REST_ACCESS_TOKEN_USERNAME:apiuser}
+      password: ${TRANSFER_REST_ACCESS_TOKEN_PASSWORD:apipass}
+      cert:
+        path: ${TRANSFER_REST_ACCESS_TOKEN_CERT_PATH:${certs.folder}/client.p12}
+        password: ${TRANSFER_REST_ACCESS_TOKEN_CERT_PASSWORD:${certs.password}}
+    sftp:
+      enabled: false
+      host: ${TRANSFER_SFTP_HOST:localhost}
+      port: ${TRANSFER_SFTP_PORT:22}
+      username: ${TRANSFER_SFTP_USERNAME:sftpuser}
+      password: ${TRANSFER_SFTP_PASSWORD:sftppass}
+      remoteDirectory: /uploads
