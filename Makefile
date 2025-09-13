@@ -1,8 +1,8 @@
 # ---- Makefile (run from repo root) ----
 APP_NAME ?= platform-scheduler
 IMAGE ?= $(APP_NAME):dev
-DOCKERFILE ?= docker/Dockerfile
-COMPOSE_FILE ?= docker/docker-compose.yml
+DOCKERFILE ?= .docker/Dockerfile
+COMPOSE_FILE ?= .docker/docker-compose.yml
 COMPOSE := docker compose -f $(COMPOSE_FILE)
 
 PORT ?= 8080
