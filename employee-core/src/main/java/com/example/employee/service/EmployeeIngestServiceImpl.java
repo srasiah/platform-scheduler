@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class EmployeeIngestServiceImpl implements EmployeeIngestService {
+public class EmployeeIngestServiceImpl extends AbstractEmployeeService implements EmployeeIngestService {
     private static final Logger log = LoggerFactory.getLogger(EmployeeIngestServiceImpl.class);
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -26,6 +26,7 @@ public class EmployeeIngestServiceImpl implements EmployeeIngestService {
     @Override
     public void ingestFromDirectory(Path ingestDir, Path processedDir) {
         log.info("Starting EmployeeCsvIngestServiceImpl.ingestFromDirectory. Ingest directory: {}", ingestDir);
+        String batchId = generateBatchId();
         try {
             if (!Files.exists(processedDir)) {
                 Files.createDirectories(processedDir);
@@ -69,17 +70,13 @@ public class EmployeeIngestServiceImpl implements EmployeeIngestService {
                                         field.set(emp, value);
                                     }
                                 } catch (Exception ex) {
-                                    log.warn("Failed to set field {} from column {}", fieldName, csvCol, ex);
+                                    log.warn("Failed to set field {} from column {} (batchId={})", fieldName, csvCol, batchId, ex);
                                 }
                             });
-                            // Set status from EmployeeCsvIngestProperties
-                            try {
-                                var statusField = emp.getClass().getDeclaredField("status");
-                                statusField.setAccessible(true);
-                                statusField.set(emp, props.getDefaultStatus());
-                            } catch (Exception ex) {
-                                log.warn("Failed to set status field from EmployeeCsvIngestProperties", ex);
-                            }
+                            // Set status from EmployeeCsvIngestProperties using abstract method
+                            updateEmployeeStatus(emp, props.getDefaultStatus());
+                            // Set batchId for this ingestion
+                            emp.setBatchId(batchId);
                             return emp;
                         }).toList();
                         employeeRepository.saveAll(employees);
