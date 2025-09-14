@@ -12,6 +12,7 @@
         <module>scheduler-core</module>
         <module>persistence-core</module>
         <module>web</module>
+        <module>employee-core</module>
     </modules>
 
     <properties>

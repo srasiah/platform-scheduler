@@ -11,8 +11,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @SpringBootApplication(scanBasePackages = "com.example")
-@EnableJpaRepositories(basePackages = "com.example.persistence.repo")
-@EntityScan(basePackages = "com.example.persistence.entity")
+@EnableJpaRepositories(basePackages = {"com.example.persistence.repo", "com.example.employee.repo"})
+@EntityScan(basePackages = {"com.example.persistence.entity", "com.example.employee.entity"})
 public class Application {
     private static final Logger log = LoggerFactory.getLogger(Application.class);
     public static void main(String[] args) {

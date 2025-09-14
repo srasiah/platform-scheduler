@@ -1,4 +1,4 @@
-package com.example.scheduler.config;
+package com.example.employee.config;
 
 import lombok.Data;
 import java.util.Map;
@@ -20,6 +20,4 @@ public abstract class AbstractEmployeeCsvProperties {
     private Map<String, String> columnMapping;
     /** Folder where processed CSV files should be moved. */
     private String processedFolder;
-    /** Status of the CSV processing. */
-    private String status;
 }

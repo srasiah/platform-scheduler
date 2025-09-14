@@ -1,31 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="AgentMigrationStateService">
-    <option name="pendingSessionIds">
-      <option value="0ad7f2b3-de55-4945-9878-1dc5ed144b59" />
-    </option>
-    <option name="pendingTurns">
-      <map>
-        <entry key="0ad7f2b3-de55-4945-9878-1dc5ed144b59">
-          <value>
-            <set>
-              <option value="5e4d9b2a-5460-497a-bd72-ab20d190d1e5" />
-              <option value="e9f5e35d-f79e-400a-bf62-d475d2e516f0" />
-            </set>
-          </value>
-        </entry>
-      </map>
-    </option>
-    <pendingWorkingSetItems>
-      <entry key="0ad7f2b3-de55-4945-9878-1dc5ed144b59">
-        <set>
-          <option value="file://$PROJECT_DIR$/common-core/src/main/java/com/example/common/package-info.java" />
-          <option value="file://$PROJECT_DIR$/persistence-core/src/main/java/com/example/persistence/package-info.java" />
-          <option value="file://$PROJECT_DIR$/scheduler-core/src/main/java/com/example/scheduler/package-info.java" />
-          <option value="file://$PROJECT_DIR$/web/src/main/java/com/example/web/package-info.java" />
-          <option value="file://$PROJECT_DIR$/scheduler-core/pom.xml" />
-        </set>
-      </entry>
-    </pendingWorkingSetItems>
+    <option name="migrationStatus" value="COMPLETED" />
   </component>
 </project>

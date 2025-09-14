@@ -45,7 +45,7 @@
 
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>persistence-core</artifactId>
+            <artifactId>scheduler-persistence</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

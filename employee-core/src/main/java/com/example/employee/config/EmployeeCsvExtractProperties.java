@@ -1,4 +1,4 @@
-package com.example.scheduler.config;
+package com.example.employee.config;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,5 +14,6 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "extract.csv.employees")
 public class EmployeeCsvExtractProperties extends AbstractEmployeeCsvProperties {
     // Inherits all properties from EmployeeCsvProperties
-    private String extractStatus; // Status to filter employees for extraction
+    private String readyToExtarctStatus; // Status to filter employees for extraction
+    private String extractedStatus;
 }

@@ -1,4 +1,4 @@
-package com.example.scheduler.config;
+package com.example.employee.config;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,4 +15,6 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "ingest.csv.employees")
 public class EmployeeCsvIngestProperties extends AbstractEmployeeCsvProperties {
     // Inherits all properties from EmployeeCsvProperties
+    /** Status of the CSV processing. */
+    private String defaultStatus;
 }
