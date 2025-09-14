@@ -81,4 +81,50 @@ public class AuthService {
             return Mono.error(e);
         }
     }
+
+    /**
+     * Get an authentication token from an external REST service using client certificate and HTTP Basic Auth with grant_type.
+     * @param authUrl The authentication endpoint URL
+     * @param username The username (for Basic Auth)
+     * @param password The password (for Basic Auth)
+     * @param grantType The OAuth2 grant type (e.g., "client_credentials")
+     * @param certResource The PKCS12 certificate as a Spring Resource
+     * @param certPassword The password for the certificate
+     * @return The authentication token as a String
+     */
+    public Mono<String> getAuthTokenWithCert(String authUrl, String username, String password, String grantType, Resource certResource, String certPassword) {
+        try {
+            KeyStore keyStore = KeyStore.getInstance("PKCS12");
+            try (InputStream certStream = certResource.getInputStream()) {
+                keyStore.load(certStream, certPassword.toCharArray());
+            }
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+            kmf.init(keyStore, certPassword.toCharArray());
+
+            SslContext sslContext = SslContextBuilder.forClient()
+                    .keyManager(kmf)
+                    .build();
+
+            HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
+            WebClient certWebClient = WebClient.builder()
+                    .clientConnector(new ReactorClientHttpConnector(httpClient))
+                    .build();
+
+            // Build Basic Auth header
+            String basicAuth = java.util.Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
+
+            // Use application/x-www-form-urlencoded for OAuth2 token requests
+            String body = "grant_type=" + grantType;
+
+            return certWebClient.post()
+                    .uri(authUrl)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+                    .header(HttpHeaders.AUTHORIZATION, "Basic " + basicAuth)
+                    .bodyValue(body)
+                    .retrieve()
+                    .bodyToMono(String.class);
+        } catch (Exception e) {
+            return Mono.error(e);
+        }
+    }
 }
