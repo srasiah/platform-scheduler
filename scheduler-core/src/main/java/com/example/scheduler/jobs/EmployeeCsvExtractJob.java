@@ -17,6 +17,10 @@ public class EmployeeCsvExtractJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) {
+        String jobName = context.getJobDetail().getKey().getName();
+        String jobGroup = context.getJobDetail().getKey().getGroup();
+        log.info("Starting Employee CSV Extract Job: {} - {}", jobGroup, jobName);
         employeeExtractService.extractToDirectory();
+        log.info("Completed Employee CSV Extract Job: {} - {}", jobGroup, jobName);
     }
 }

@@ -18,6 +18,10 @@ public class EmployeeCsvIngestJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) {
+        String jobName = context.getJobDetail().getKey().getName();
+        String jobGroup = context.getJobDetail().getKey().getGroup();
+        log.info("Starting Employee CSV Ingest Job: {} - {}", jobGroup, jobName);
         employeeIngestService.ingestFromDirectory();
+        log.info("Completed Employee CSV Ingest Job: {} - {}", jobGroup, jobName);
     }
 }

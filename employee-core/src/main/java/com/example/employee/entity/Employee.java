@@ -21,6 +21,9 @@ public class Employee {
     private Integer age;
     @Setter
     private String status;
+    @Setter
+    @Column(name = "batch_id")
+    private String batchId;
     @Column(insertable = false, updatable = false, unique = true, name = "transaction_id")
     private Long transactionId;
     @Setter
@@ -33,6 +36,7 @@ public class Employee {
     public String getName() { return name; }
     public Integer getAge() { return age; }
     public String getStatus() { return status; }
+    public String getBatchId() { return batchId; }
     public Long getTransactionId() { return transactionId; }
     public java.util.Date getCreatedDate() { return createdDate; }
 }

@@ -9,13 +9,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
 @Service
-public class EmployeeExtractServiceImpl implements EmployeeExtractService {
+public class EmployeeExtractServiceImpl extends AbstractEmployeeService implements EmployeeExtractService {
     private static final Logger log = LoggerFactory.getLogger(EmployeeExtractServiceImpl.class);
     @Autowired
     private EmployeeRepository employeeRepository;
@@ -24,15 +23,10 @@ public class EmployeeExtractServiceImpl implements EmployeeExtractService {
 
     @Override
     public void extractToDirectory(Path extractDir, String readyToExtractStatus) {
-        log.info("Starting EmployeeExtractServiceImpl. Extract directory: {}", extractDir);
-        try {
-            if (!Files.exists(extractDir)) {
-                Files.createDirectories(extractDir);
-            }
-        } catch (Exception e) {
-            log.error("Failed to create extract folder: {}", extractDir, e);
-        }
-        log.info("Extracting employees with status: {}", readyToExtractStatus);
+        String batchId = generateBatchId();
+        log.info("Starting EmployeeExtractServiceImpl. batchId={}, Extract directory: {}", batchId, extractDir);
+        ensureDirectoryExists(extractDir);
+        log.info("Extracting employees with status: {} (batchId={})", readyToExtractStatus, batchId);
         List<Employee> employees = employeeRepository.findAll().stream()
             .filter(emp -> {
                 try {
@@ -47,7 +41,7 @@ public class EmployeeExtractServiceImpl implements EmployeeExtractService {
             })
             .toList();
         if (employees.isEmpty()) {
-            log.info("No employee records with status '{}' found in database. Skipping export process.", readyToExtractStatus);
+            log.info("No employee records with status '{}' found in database. Skipping export process. (batchId={})", readyToExtractStatus, batchId);
             return;
         }
         // Prepare data for CSV
@@ -70,22 +64,17 @@ public class EmployeeExtractServiceImpl implements EmployeeExtractService {
                 }
             }
             rows.add(row);
-            // Update status to extracted
-            try {
-                var statusField = emp.getClass().getDeclaredField("status");
-                statusField.setAccessible(true);
-                statusField.set(emp, props.getExtractedStatus());
-            } catch (Exception ex) {
-                log.warn("Failed to update status field for employee {}", emp.getId(), ex);
-            }
+            // Update status to extracted using abstract method
+            updateEmployeeStatus(emp, props.getExtractedStatus());
+            // No batchId set for extraction
         }
-        Path outputFile = extractDir.resolve(props.getFileNamePrefix() + System.currentTimeMillis() + ".csv");
+        Path outputFile = extractDir.resolve(props.getFileNamePrefix() + batchId + "-" + System.currentTimeMillis() + ".csv");
         try {
             CsvUtils.writeCsv(outputFile.toString(), rows);
             employeeRepository.saveAll(employees);
-            log.info("Extracted {} employees to file: {}", employees.size(), outputFile);
+            log.info("Extracted {} employees to file: {} (batchId={})", employees.size(), outputFile, batchId);
         } catch (Exception e) {
-            log.error("Failed to write extracted employees to file {}", outputFile, e);
+            log.error("Failed to write extracted employees to file {} (batchId={})", outputFile, batchId, e);
         }
     }
 
