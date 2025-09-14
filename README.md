@@ -151,3 +151,9 @@ make test-employee-core # Run only employee-core unit tests
 ```
 
 See the `Makefile` for more details and advanced options.
+
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
