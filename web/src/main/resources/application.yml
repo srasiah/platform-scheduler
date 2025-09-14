@@ -1,5 +1,5 @@
 csv:
-  baseFolder: ${CSV_BASE_FOLDER:./data} 
+  baseFolder: ${CSV_BASE_FOLDER:./.data}
   archive:
     enabled: true
   zip:
@@ -82,7 +82,7 @@ logging:
 ingest:
   csv:
     employees:
-      status: IN_PROGRESS 
+      defaultStatus: IN_PROGRESS
       enabled: true
       fileFolder: ${csv.baseFolder}/ingest/employees
       processedFolder: ${csv.baseFolder}/ingest/employees/processed
@@ -100,8 +100,8 @@ ingest:
 extract:
   csv:
     employees:
-      extractStatus: IN_PROGRESS
-      status: EXTRACTED
+      readyToExtarctStatus: IN_PROGRESS
+      extractedStatus: EXTRACTED
       enabled: true
       fileFolder: ${csv.baseFolder}/extract/employees
       processedFolder: ${csv.baseFolder}/extract/employees/processed
