@@ -9,7 +9,7 @@ PORT ?= 8080
 BUILD_ARGS ?=
 RUN_ARGS ?=
 
-.PHONY: docker-build compose-build run run-d app-only logs stop stop-v ps db-shell app-shell push mvn clean docker-prune docker-rm-all
+.PHONY: docker-build compose-build run run-d app-only logs stop stop-v ps db-shell app-shell push mvn clean docker-prune docker-rm-all test test-employee-core db-only
 
 # Build only the app image (no DB), using Dockerfile in docker/
 docker-build:
@@ -34,6 +34,10 @@ run-d:
 #    -e SPRING_DATASOURCE_USERNAME=scheduler -e SPRING_DATASOURCE_PASSWORD=scheduler'
 app-only:
 	docker run --rm -p $(PORT):8080 --name $(APP_NAME) $(RUN_ARGS) $(IMAGE)
+
+# Run only the db container (useful for local dev)
+db-only:
+	docker compose -f .docker/docker-compose.yml up -d db
 
 logs:
 	$(COMPOSE) logs -f app
@@ -80,3 +84,11 @@ docker-prune:
 docker-rm-all:
 	docker rm -f $(shell docker ps -aq) || true
 	docker rmi -f $(shell docker images -aq) || true
+
+# Run all unit tests for the project
+test:
+	mvn test
+
+# Run only employee-core unit tests
+test-employee-core:
+	mvn -pl employee-core test

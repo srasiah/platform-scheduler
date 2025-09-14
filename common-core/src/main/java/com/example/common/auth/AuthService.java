@@ -53,17 +53,7 @@ public class AuthService {
      */
     public Mono<String> getAuthTokenWithCert(String authUrl, String username, String password, Resource certResource, String certPassword) {
         try {
-            KeyStore keyStore = KeyStore.getInstance("PKCS12");
-            try (InputStream certStream = certResource.getInputStream()) {
-                keyStore.load(certStream, certPassword.toCharArray());
-            }
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            kmf.init(keyStore, certPassword.toCharArray());
-
-            SslContext sslContext = SslContextBuilder.forClient()
-                    .keyManager(kmf)
-                    .build();
-
+            SslContext sslContext = createSslContext(certResource, certPassword);
             HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
             WebClient certWebClient = WebClient.builder()
                     .clientConnector(new ReactorClientHttpConnector(httpClient))
@@ -94,28 +84,14 @@ public class AuthService {
      */
     public Mono<String> getAuthTokenWithCert(String authUrl, String username, String password, String grantType, Resource certResource, String certPassword) {
         try {
-            KeyStore keyStore = KeyStore.getInstance("PKCS12");
-            try (InputStream certStream = certResource.getInputStream()) {
-                keyStore.load(certStream, certPassword.toCharArray());
-            }
-            KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-            kmf.init(keyStore, certPassword.toCharArray());
-
-            SslContext sslContext = SslContextBuilder.forClient()
-                    .keyManager(kmf)
-                    .build();
-
+            SslContext sslContext = createSslContext(certResource, certPassword);
             HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
-            WebClient certWebClient = WebClient.builder()
-                    .clientConnector(new ReactorClientHttpConnector(httpClient))
-                    .build();
+            // Use the internal webClient, which can be mocked in tests
+            WebClient certWebClient = this.webClient;
 
             // Build Basic Auth header
             String basicAuth = java.util.Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
-
-            // Use application/x-www-form-urlencoded for OAuth2 token requests
             String body = "grant_type=" + grantType;
-
             return certWebClient.post()
                     .uri(authUrl)
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED_VALUE)
@@ -126,5 +102,18 @@ public class AuthService {
         } catch (Exception e) {
             return Mono.error(e);
         }
+    }
+
+    /**
+     * Protected method to create SslContext for client certificate auth. Can be mocked in tests.
+     */
+    protected SslContext createSslContext(Resource certResource, String certPassword) throws Exception {
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
+        try (InputStream certStream = certResource.getInputStream()) {
+            keyStore.load(certStream, certPassword.toCharArray());
+        }
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(keyStore, certPassword.toCharArray());
+        return SslContextBuilder.forClient().keyManager(kmf).build();
     }
 }

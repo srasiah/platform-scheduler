@@ -5,7 +5,7 @@ A production-ready blueprint for a multi-module Spring Boot application that sup
 ---
 
 ## Features
-- Modular Maven structure: `common`, `scheduler`, `persistence`, `web`
+- Modular Maven structure: `common-core`, `scheduler-core`, `persistence-core`, `employee-core`, `web`
 - Quartz (JDBC JobStore) for durable scheduling
 - PostgreSQL for persistence
 - Spring Data JPA for job history
@@ -13,6 +13,8 @@ A production-ready blueprint for a multi-module Spring Boot application that sup
 - OpenAPI docs (springdoc-openapi)
 - Docker & Docker Compose for local dev
 - GitHub Actions for CI/CD
+- **Robust unit tests for extract and ingest services** (see Makefile and SmokeTest.md)
+- **Employee extract/ingest with CSV, status update, and transactionId/createdDate fields**
 
 ---
 
@@ -20,15 +22,21 @@ A production-ready blueprint for a multi-module Spring Boot application that sup
 
 ```bash
 # 1. Start Postgres
-docker compose -f docker/docker-compose.yml up -d
+docker compose -f .docker/docker-compose.yml up -d
 
 # 2. Build all modules
 mvn -T1C clean package
 
-# 3. Run the app
+# 3. Run all unit tests
+make test
+
+# 4. Run only employee-core unit tests
+make test-employee-core
+
+# 5. Run the app
 java -jar web/target/web-*.jar
 
-# 4. Explore API
+# 6. Explore API
 open http://localhost:8080/swagger-ui
 ```
 
@@ -39,11 +47,12 @@ open http://localhost:8080/swagger-ui
 ```
 scheduler-platform/
 ├── pom.xml                # parent aggregator
-├── common/
-├── scheduler/
-├── persistence/
+├── common-core/
+├── scheduler-core/
+├── persistence-core/
 ├── web/
-├── docker/
+├── employee-core/
+├── .docker/
 │   ├── Dockerfile
 │   └── docker-compose.yml
 └── .github/workflows/
@@ -57,6 +66,8 @@ scheduler-platform/
 - Edit configs in `web/src/main/resources/`
 - Use `docker-compose` for DB
 - Build with Maven wrapper or system Maven
+- Run all unit tests: `make test`
+- Run only employee-core tests: `make test-employee-core`
 
 ---
 
@@ -94,6 +105,18 @@ curl http://localhost:8080/api/jobs/{jobId}/history
 
 ---
 
+## Employee Extract/Ingest
+
+- **Extract:**
+  - Employees with status `READY` are exported to CSV, status updated to `EXTRACTED`, and transactionId/createdDate set by DB.
+  - Run: (see service or schedule job via API)
+- **Ingest:**
+  - Reads CSV, creates employees, sets status, and moves processed files.
+  - Run: (see service or schedule job via API)
+- See `SmokeTest.md` for validation steps.
+
+---
+
 ## Enhancements & Next Steps
 - Add a UI (React/Thymeleaf) in `web`
 - Add multi-tenancy, observability, and more job types
@@ -118,10 +141,13 @@ make stop-v        # Stop and remove containers + volumes
 make clean         # Remove containers, volumes, and app image
 make docker-prune  # Remove all dangling/unused Docker images
 make docker-rm-all # DANGER: Remove ALL containers and images (use with caution)
+make app-only       # Run only the app container (useful if pointing at external DB)
+make db-only        # Run only the db container (useful for local dev)
 make logs          # Tail app logs
 make db-shell      # Open psql shell to database
 make app-shell     # Open shell in app container
+make test          # Run all unit tests
+make test-employee-core # Run only employee-core unit tests
 ```
 
 See the `Makefile` for more details and advanced options.
-
