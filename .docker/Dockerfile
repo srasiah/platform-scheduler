@@ -4,10 +4,10 @@ WORKDIR /workspace
 
 # Cache-friendly: copy POMs first
 COPY pom.xml .
-COPY common/pom.xml common/pom.xml
-COPY persistence/pom.xml persistence/pom.xml
+COPY common-core/pom.xml common-core/pom.xml
+COPY persistence-core/pom.xml persistence-core/pom.xml
 COPY web/pom.xml web/pom.xml
-COPY scheduler/pom.xml scheduler/pom.xml
+COPY scheduler-core/pom.xml scheduler-core/pom.xml
 
 # Prime Maven cache
 RUN --mount=type=cache,target=/root/.m2 mvn -B -q -DskipTests dependency:go-offline

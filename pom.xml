@@ -8,9 +8,9 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>common</module>
-        <module>scheduler</module>
-        <module>persistence</module>
+        <module>common-core</module>
+        <module>scheduler-core</module>
+        <module>persistence-core</module>
         <module>web</module>
     </modules>
 

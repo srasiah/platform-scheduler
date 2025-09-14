@@ -11,7 +11,7 @@
     </parent>
 
 
-    <artifactId>common</artifactId>
+    <artifactId>common-core</artifactId>
 
     <dependencies>
         <dependency>

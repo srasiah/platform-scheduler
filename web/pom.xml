@@ -34,18 +34,18 @@
         <!-- Your modules -->
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>scheduler</artifactId>
+            <artifactId>scheduler-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>common</artifactId>
+            <artifactId>common-core</artifactId>
             <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>persistence</artifactId>
+            <artifactId>persistence-core</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
