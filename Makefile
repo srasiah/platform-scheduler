@@ -3,7 +3,14 @@ APP_NAME ?= platform-scheduler
 IMAGE ?= $(APP_NAME):dev
 DOCKERFILE ?= .docker/Dockerfile
 COMPOSE_FILE ?= .docker/docker-compose.yml
-COMPOSE := docker compose -f $(COMPOSE_FILE)
+# Use podman if available, otherwise docker
+CONTAINER_CMD := $(shell command -v podman 2>/dev/null || command -v docker)
+# Use podman-compose if using podman, otherwise docker compose
+ifeq ($(shell command -v podman 2>/dev/null),)
+	COMPOSE := docker compose -f $(COMPOSE_FILE)
+else
+	COMPOSE := podman-compose -f $(COMPOSE_FILE)
+endif
 
 PORT ?= 8080
 BUILD_ARGS ?=
@@ -13,7 +20,7 @@ RUN_ARGS ?=
 
 # Build only the app image (no DB), using Dockerfile in docker/
 docker-build:
-	docker build -t $(IMAGE) -f $(DOCKERFILE) $(BUILD_ARGS) .
+	$(CONTAINER_CMD) build -t $(IMAGE) -f $(DOCKERFILE) $(BUILD_ARGS) .
 
 # Build via docker-compose (app + db)
 compose-build:
@@ -33,11 +40,11 @@ run-d:
 #    -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/scheduler \
 #    -e SPRING_DATASOURCE_USERNAME=scheduler -e SPRING_DATASOURCE_PASSWORD=scheduler'
 app-only:
-	docker run --rm -p $(PORT):8080 --name $(APP_NAME) $(RUN_ARGS) $(IMAGE)
+	$(CONTAINER_CMD) run --rm -p $(PORT):8080 --name $(APP_NAME) $(RUN_ARGS) $(IMAGE)
 
 # Run only the db container (useful for local dev)
 db-only:
-	docker compose -f .docker/docker-compose.yml up -d db
+	$(COMPOSE) up -d db
 
 logs:
 	$(COMPOSE) logs -f app
@@ -60,11 +67,11 @@ app-shell:
 	$(COMPOSE) exec app sh
 
 push:
-	docker push $(IMAGE)
+	$(CONTAINER_CMD) push $(IMAGE)
 
 # Run Maven on host inside a container (does NOT build the Docker image)
 mvn:
-	docker run --rm \
+	$(CONTAINER_CMD) run --rm \
 	  -u $$(id -u):$$(id -g) \
 	  -v $$PWD/web:/app \
 	  -v $$HOME/.m2:/root/.m2 \
@@ -73,17 +80,17 @@ mvn:
 
 clean:
 	- $(COMPOSE) down -v
-	- docker image rm $(IMAGE) || true
+	- $(CONTAINER_CMD) image rm $(IMAGE) || true
 
 # Remove all dangling/unused images (safe prune)
 docker-prune:
-	docker image prune -a -f
+	$(CONTAINER_CMD) image prune -a -f
 
 # DANGER: Remove ALL containers and images on your system!
 # Use with caution. This will stop and delete ALL containers and images.
 docker-rm-all:
-	docker rm -f $(shell docker ps -aq) || true
-	docker rmi -f $(shell docker images -aq) || true
+	$(CONTAINER_CMD) rm -f $(shell $(CONTAINER_CMD) ps -aq) || true
+	$(CONTAINER_CMD) rmi -f $(shell $(CONTAINER_CMD) images -aq) || true
 
 # Run all unit tests for the project
 test:

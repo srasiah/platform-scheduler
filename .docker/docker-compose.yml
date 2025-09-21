@@ -36,9 +36,9 @@ services:
       CSV_BASE_FOLDER: ${CSV_BASE_FOLDER:-./.data}
 
     volumes:
-      - ../.data:/app/.data
+      - ../.data:/app/.data:rw
       - ../.certs:/app/.certs:ro
-      - ../.logs:/app/logs
+      - ../.logs:/app/logs:rw
 
     ports: ["8080:8080"]
 
