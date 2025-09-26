@@ -22,6 +22,10 @@ public class Employee {
     @Setter
     private String status;
     @Setter
+    @Column(name = "dob")
+    @Temporal(TemporalType.DATE)
+    private java.util.Date dob;
+    @Setter
     @Column(name = "batch_id")
     private String batchId;
     @Column(insertable = false, updatable = false, unique = true, name = "transaction_id")
@@ -36,6 +40,7 @@ public class Employee {
     public String getName() { return name; }
     public Integer getAge() { return age; }
     public String getStatus() { return status; }
+    public java.util.Date getDob() { return dob; }
     public String getBatchId() { return batchId; }
     public Long getTransactionId() { return transactionId; }
     public java.util.Date getCreatedDate() { return createdDate; }

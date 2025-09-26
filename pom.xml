@@ -19,6 +19,9 @@
         <java.version>17</java.version>
         <spring-boot.version>3.3.2</spring-boot.version>
         <quartz.version>2.3.2</quartz.version>
+        <flyway.version>10.17.0</flyway.version>
+        <opencsv.version>5.9</opencsv.version>
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -26,12 +29,12 @@
             <dependency>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-core</artifactId>
-                <version>10.17.0</version> <!-- or newer 10.x -->
+                <version>${flyway.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-database-postgresql</artifactId>
-                <version>10.17.0</version> <!-- match core -->
+                <version>${flyway.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -92,7 +95,7 @@
             <dependency>
                 <groupId>com.opencsv</groupId>
                 <artifactId>opencsv</artifactId>
-                <version>5.9</version>
+                <version>${opencsv.version}</version>
             </dependency>
 
         </dependencies>
@@ -104,7 +107,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.11.0</version>
+                    <version>${maven-compiler-plugin.version}</version>
                     <configuration>
                         <release>${java.version}</release>
                         <parameters>true</parameters>

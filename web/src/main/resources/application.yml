@@ -82,6 +82,7 @@ logging:
 ingest:
   csv:
     employees:
+      dateFormat: yyyy-MM-dd
       defaultStatus: IN_PROGRESS
       enabled: true
       fileFolder: ${csv.baseFolder}/ingest/employees
@@ -92,6 +93,7 @@ ingest:
         person_id: id
         full_name: name
         years: age
+        date_of_birth: dob
   archive:
     enabled: true
   zip:
@@ -100,7 +102,8 @@ ingest:
 extract:
   csv:
     employees:
-      readyToExtarctStatus: IN_PROGRESS
+      dateFormat: yyyy-MM-dd
+      readyToExtractStatus: IN_PROGRESS
       extractedStatus: EXTRACTED
       enabled: true
       fileFolder: ${csv.baseFolder}/extract/employees
@@ -111,6 +114,7 @@ extract:
         person_id: id
         full_name: name
         years: age
+        date_of_birth: dob
   archive:
     enabled: true
   zip:
