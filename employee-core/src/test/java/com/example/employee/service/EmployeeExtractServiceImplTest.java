@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -27,14 +26,7 @@ class EmployeeExtractServiceImplTest {
     void setUp() throws Exception {
         employeeRepository = mock(EmployeeRepository.class);
         props = mock(EmployeeCsvExtractProperties.class);
-        service = new EmployeeExtractServiceImpl();
-        // Inject mocks using reflection
-        Field repoField = EmployeeExtractServiceImpl.class.getDeclaredField("employeeRepository");
-        repoField.setAccessible(true);
-        repoField.set(service, employeeRepository);
-        Field propsField = EmployeeExtractServiceImpl.class.getDeclaredField("props");
-        propsField.setAccessible(true);
-        propsField.set(service, props);
+        service = new EmployeeExtractServiceImpl(employeeRepository, props);
     }
 
     @Test
@@ -45,7 +37,7 @@ class EmployeeExtractServiceImplTest {
         Employee emp2 = new Employee();
         emp2.setId(2L); emp2.setName("Bob"); emp2.setAge(40); emp2.setStatus("READY");
         List<Employee> employees = Arrays.asList(emp1, emp2);
-        when(employeeRepository.findAll()).thenReturn(employees);
+        when(employeeRepository.findByStatus("READY")).thenReturn(employees);
         when(props.getColumnMapping()).thenReturn(Map.of("id","id","name","name","age","age","status","status"));
         when(props.getFileNamePrefix()).thenReturn("emp-");
         when(props.getExtractedStatus()).thenReturn("EXTRACTED");
@@ -64,7 +56,7 @@ class EmployeeExtractServiceImplTest {
 
     @Test
     void testExtractToDirectory_NoEmployeesWithStatus() {
-        when(employeeRepository.findAll()).thenReturn(List.of());
+        when(employeeRepository.findByStatus("READY")).thenReturn(List.of());
         when(props.getColumnMapping()).thenReturn(Map.of("id","id"));
         service.extractToDirectory(Path.of("/tmp"), "READY");
         verify(employeeRepository, never()).saveAll(any());

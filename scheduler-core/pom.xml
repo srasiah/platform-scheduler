@@ -20,7 +20,7 @@
 
         <dependency>
             <groupId>com.example</groupId>
-            <artifactId>scheduler-persistence</artifactId>
+            <artifactId>persistence-core</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

@@ -1,0 +1,36 @@
+# Dockerfile.Test - For running Maven compilation and tests
+# Usage: 
+#   docker build -f .docker/Dockerfile.Test -t platform-scheduler-test .
+#   docker run --rm platform-scheduler-test
+
+ARG MAVEN_IMAGE=maven:3.9.9-eclipse-temurin-21`
+FROM ${MAVEN_IMAGE} AS test-runner
+WORKDIR /workspace
+
+# Set environment for consistent builds
+ENV MAVEN_OPTS="-Xmx1024m -XX:MaxMetaspaceSize=256m"
+ENV TZ=UTC
+ENV LANG=C.UTF-8
+
+# Cache-friendly: copy POMs first to leverage Docker layer caching
+COPY pom.xml .
+COPY common-core/pom.xml common-core/pom.xml
+COPY persistence-core/pom.xml persistence-core/pom.xml
+COPY web/pom.xml web/pom.xml
+COPY scheduler-core/pom.xml scheduler-core/pom.xml
+COPY employee-core/pom.xml employee-core/pom.xml
+
+# Copy all source code (needed for multi-module dependencies)
+COPY . .
+
+# Download external dependencies and compile all modules
+# This handles inter-module dependencies properly
+RUN --mount=type=cache,target=/root/.m2 \
+    mvn -B -T1C compile test-compile
+
+# Default command: run all tests
+# Override with specific commands as needed:
+#   docker run --rm platform-scheduler-test mvn -pl employee-core test
+#   docker run --rm platform-scheduler-test mvn compile
+#   docker run --rm platform-scheduler-test mvn clean verify
+CMD ["mvn", "-B", "test"]

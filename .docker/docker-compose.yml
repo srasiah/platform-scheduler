@@ -20,7 +20,9 @@ services:
       context: ..
       dockerfile: .docker/Dockerfile
       args:
-        # forwarded into your Dockerfile as ARG MAVEN_ARGS
+        # forwarded into your Dockerfile as build arguments
+        MAVEN_IMAGE: ${MAVEN_IMAGE:-maven:3.9.9-eclipse-temurin-21}
+        JRE_IMAGE: ${JRE_IMAGE:-eclipse-temurin:21-jre}
         MAVEN_ARGS: ${MAVEN_ARGS:--T1C -DskipTests}
     depends_on:
       db:

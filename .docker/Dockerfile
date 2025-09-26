@@ -1,5 +1,9 @@
+# ---- Global build arguments ----
+ARG MAVEN_IMAGE=maven:3.9.9-eclipse-temurin-21
+ARG JRE_IMAGE=eclipse-temurin:21-jre
+
 # ---- Build stage ----
-FROM maven:3.9.9-eclipse-temurin-17 AS builder
+FROM ${MAVEN_IMAGE} AS builder
 WORKDIR /workspace
 
 # Cache-friendly: copy POMs first
@@ -23,7 +27,7 @@ RUN bash -c "jar tf web/target/web-*.jar | grep -q 'BOOT-INF/classes/application
              (echo 'ERROR: application.yml not found in JAR. Is it at web/src/main/resources/?' && exit 1)"
 
 # ---- Run stage ----
-FROM eclipse-temurin:17-jre
+FROM ${JRE_IMAGE}
 WORKDIR /app
 
 # Non-root user

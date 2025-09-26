@@ -5,7 +5,9 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +78,56 @@ public class CsvUtils {
             }
             return files;
         }
+    }
+
+    /**
+     * Reads a CSV file and returns a list of maps where each map represents a row
+     * with column names as keys and cell values as values.
+     * @param filePath Path to the CSV file
+     * @param separator The separator character
+     * @return List of Map<String, String> records
+     */
+    public static List<Map<String, String>> readCsvFile(Path filePath, char separator) throws IOException {
+        log.info("Reading CSV file: {}", filePath);
+        log.info("Reading CSV file: {} with separator '{}'", filePath, separator);
+        
+        try (Reader reader = Files.newBufferedReader(filePath);
+             CSVReader csvReader = new CSVReaderBuilder(reader)
+                     .withCSVParser(new CSVParserBuilder().withSeparator(separator).build())
+                     .build()) {
+            
+            List<Map<String, String>> records = new ArrayList<>();
+            String[] headers = csvReader.readNext(); // First row as headers
+            
+            if (headers == null) {
+                log.warn("CSV file {} is empty or has no headers", filePath);
+                return records;
+            }
+            
+            String[] nextLine;
+            while ((nextLine = csvReader.readNext()) != null) {
+                Map<String, String> record = new HashMap<>();
+                for (int i = 0; i < headers.length && i < nextLine.length; i++) {
+                    record.put(headers[i], nextLine[i]);
+                }
+                records.add(record);
+            }
+            
+            log.info("Read {} records from {}", records.size(), filePath);
+            return records;
+        } catch (Exception e) {
+            log.error("Error reading CSV file: {}", filePath, e);
+            throw new IOException("Error reading CSV file: " + filePath, e);
+        }
+    }
+
+    /**
+     * Reads a CSV file with default comma separator.
+     * @param filePath Path to the CSV file
+     * @return List of Map<String, String> records
+     */
+    public static List<Map<String, String>> readCsvFile(Path filePath) throws IOException {
+        return readCsvFile(filePath, ',');
     }
 
     /**

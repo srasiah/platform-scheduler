@@ -20,4 +20,7 @@ public abstract class AbstractEmployeeCsvProperties {
     private Map<String, String> columnMapping;
     /** Folder where processed CSV files should be moved. */
     private String processedFolder;
+    /** Date format for parsing date fields in the CSV. */
+    private String dateFormat;      
+
 }
