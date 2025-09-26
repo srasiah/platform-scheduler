@@ -17,6 +17,14 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/scheduler}
     username: ${SPRING_DATASOURCE_USERNAME:scheduler}
     password: ${SPRING_DATASOURCE_PASSWORD:scheduler}
+    hikari:
+      pool-name: HikariPool-Scheduler
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
   jpa:
     open-in-view: false
     hibernate:
@@ -78,6 +86,9 @@ springdoc:
 logging:
   level:
     org.springframework: INFO
+    com.zaxxer.hikari.HikariConfig: INFO
+    com.zaxxer.hikari: INFO
+    org.springframework.jdbc.datasource: DEBUG
 
 ingest:
   csv:
