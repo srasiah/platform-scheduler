@@ -21,8 +21,11 @@ A production-ready blueprint for a multi-module Spring Boot application that sup
 ## Quick Start
 
 ```bash
-# 1. Start Postgres
+# 1. Start Postgres (Docker or Podman supported)
+#    - For Docker: (default)
 docker compose -f .docker/docker-compose.yml up -d
+#    - For Podman:
+podman-compose -f .docker/docker-compose.yml up -d
 
 # 2. Build all modules
 mvn -T1C clean package
@@ -39,6 +42,24 @@ java -jar web/target/web-*.jar
 # 6. Explore API
 open http://localhost:8080/swagger-ui
 ```
+
+---
+
+### Podman Users: Required Setup
+
+If you use Podman instead of Docker, you must:
+
+1. **Install podman-compose**
+  ```bash
+  sudo apt update
+  sudo apt install podman-compose
+  ```
+2. **Configure image registry resolution**
+  Edit `/etc/containers/registries.conf` and set:
+  ```toml
+  unqualified-search-registries = ["docker.io"]
+  ```
+  This allows Podman to pull images like `postgres:16.3` and `maven:3.9.9-eclipse-temurin-17` from Docker Hub.
 
 ---
 
@@ -131,24 +152,27 @@ See `SmokeTest.md` for a step-by-step validation guide.
 
 ## Makefile Usage
 
+
 Common development commands (run from repo root):
 
 ```bash
-make run           # Start app + db via docker-compose (blocking)
+make run           # Start app + db (Docker or Podman Compose)
 make run-d         # Start app + db in detached mode
 make stop          # Stop and remove containers
 make stop-v        # Stop and remove containers + volumes
 make clean         # Remove containers, volumes, and app image
-make docker-prune  # Remove all dangling/unused Docker images
+make docker-prune  # Remove all dangling/unused images
 make docker-rm-all # DANGER: Remove ALL containers and images (use with caution)
-make app-only       # Run only the app container (useful if pointing at external DB)
-make db-only        # Run only the db container (useful for local dev)
+make app-only      # Run only the app container (useful if pointing at external DB)
+make db-only       # Run only the db container (useful for local dev)
 make logs          # Tail app logs
 make db-shell      # Open psql shell to database
 make app-shell     # Open shell in app container
 make test          # Run all unit tests
 make test-employee-core # Run only employee-core unit tests
 ```
+
+> **Note:** The Makefile auto-detects Podman or Docker. For Podman Compose, ensure `podman-compose` is installed and registry config is set as above.
 
 See the `Makefile` for more details and advanced options.
 
