@@ -50,6 +50,7 @@
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-test</artifactId>
+                <version>${spring-boot.version}</version>
                 <scope>test</scope>
                 <exclusions>
                     <!-- remove JUnit 4 -->
@@ -112,6 +113,14 @@
                 <groupId>com.akeyless-security</groupId>
                 <artifactId>akeyless-java-sdk</artifactId>
                 <version>${akeyless.version}</version>
+            </dependency>
+
+            <!-- MockWebServer for testing HTTP clients -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>mockwebserver</artifactId>
+                <version>4.12.0</version>
+                <scope>test</scope>
             </dependency>
 
         </dependencies>
