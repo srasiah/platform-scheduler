@@ -12,6 +12,15 @@ certs:
 server:
   port: ${SERVER_PORT:8080}
 
+# Akeyless Configuration
+akeyless:
+  api-url: ${AKEYLESS_API_URL:https://api.akeyless.io}
+  api-key: ${AKEYLESS_API_KEY:}
+  access-id: ${AKEYLESS_ACCESS_ID:}
+  database:
+    secret-name: ${AKEYLESS_DB_SECRET_NAME:/database/postgresql/scheduler}
+    refresh-interval: ${AKEYLESS_DB_REFRESH_INTERVAL:3600} # seconds (1 hour)
+
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/scheduler}

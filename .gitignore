@@ -40,3 +40,8 @@ build/
 ### Env
 .env
 *.log
+logs/
+*.tmp
+*.temp
+*.swp
+*~

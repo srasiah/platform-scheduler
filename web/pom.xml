@@ -30,6 +30,12 @@
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
         </dependency>
 
+        <!-- Akeyless SDK -->
+        <dependency>
+            <groupId>com.akeyless-security</groupId>
+            <artifactId>akeyless-java-sdk</artifactId>
+        </dependency>
+
         <!-- Your modules -->
         <dependency>
             <groupId>com.example</groupId>

@@ -23,6 +23,7 @@
         <opencsv.version>5.9</opencsv.version>
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <springdoc.version>2.6.0</springdoc.version>
+        <akeyless.version>0.0.10</akeyless.version>
     </properties>
 
     <dependencyManagement>
@@ -104,6 +105,13 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc.version}</version>
+            </dependency>
+
+            <!-- Akeyless SDK -->
+            <dependency>
+                <groupId>com.akeyless-security</groupId>
+                <artifactId>akeyless-java-sdk</artifactId>
+                <version>${akeyless.version}</version>
             </dependency>
 
         </dependencies>
