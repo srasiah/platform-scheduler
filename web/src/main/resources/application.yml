@@ -90,48 +90,88 @@ logging:
     com.zaxxer.hikari: INFO
     org.springframework.jdbc.datasource: DEBUG
 
-ingest:
-  csv:
-    employees:
-      dateFormat: yyyy-MM-dd
-      defaultStatus: IN_PROGRESS
-      enabled: true
-      fileFolder: ${csv.baseFolder}/ingest/employees
-      processedFolder: ${csv.baseFolder}/ingest/employees/processed
-      fileNamePrefix: employees-
-      tableName: employee 
-      columnMapping:
-        person_id: id
-        full_name: name
-        years: age
-        date_of_birth: dob
-  archive:
-    enabled: true
-  zip:
-    enabled: true
+# Employee Configuration
+employee:
+  # Delta Detection Configuration
+  delta:
+    enabled: ${EMPLOYEE_DELTA_ENABLED:true}
+    maxBatchesRetention: ${EMPLOYEE_DELTA_MAX_BATCHES:100}
+    batchRetentionPeriod: ${EMPLOYEE_DELTA_RETENTION_DAYS:90d}
+    autoCleanupEnabled: ${EMPLOYEE_DELTA_AUTO_CLEANUP:true}
+    ignoredFields: ${EMPLOYEE_DELTA_IGNORED_FIELDS:transactionId,createdDate}
+    detectNew: ${EMPLOYEE_DELTA_DETECT_NEW:true}
+    detectUpdated: ${EMPLOYEE_DELTA_DETECT_UPDATED:true}
+    detectDeleted: ${EMPLOYEE_DELTA_DETECT_DELETED:true}
+    detailedChangeLogging: ${EMPLOYEE_DELTA_DETAILED_LOGGING:true}
+    
+    # Delta Reporting Configuration
+    reporting:
+      enabled: ${EMPLOYEE_DELTA_REPORTING_ENABLED:true}
+      outputDirectory: ${EMPLOYEE_DELTA_REPORT_DIR:${csv.baseFolder}/reports/delta}
+      fileNamePrefix: ${EMPLOYEE_DELTA_REPORT_PREFIX:employee-delta-report-}
+      generateDetailedReports: ${EMPLOYEE_DELTA_DETAILED_REPORTS:true}
+      generateSummaryReports: ${EMPLOYEE_DELTA_SUMMARY_REPORTS:true}
+      maxRecordsPerReport: ${EMPLOYEE_DELTA_MAX_RECORDS_PER_REPORT:10000}
+      includeUnchangedFields: ${EMPLOYEE_DELTA_INCLUDE_UNCHANGED:false}
+    
+    # Performance Configuration
+    performance:
+      batchSize: ${EMPLOYEE_DELTA_BATCH_SIZE:1000}
+      parallelProcessing: ${EMPLOYEE_DELTA_PARALLEL:true}
+      threadPoolSize: ${EMPLOYEE_DELTA_THREAD_POOL:0}
+      enableSnapshotCaching: ${EMPLOYEE_DELTA_ENABLE_CACHE:true}
+      maxCacheSize: ${EMPLOYEE_DELTA_MAX_CACHE:50000}
+    
+    # Notification Configuration
+    notifications:
+      enabled: ${EMPLOYEE_DELTA_NOTIFICATIONS_ENABLED:false}
+      newRecordThreshold: ${EMPLOYEE_DELTA_NEW_THRESHOLD:100}
+      updatedRecordThreshold: ${EMPLOYEE_DELTA_UPDATED_THRESHOLD:50}
+      deletedRecordThreshold: ${EMPLOYEE_DELTA_DELETED_THRESHOLD:10}
+      recipients: ${EMPLOYEE_DELTA_NOTIFICATION_EMAILS:}
+      includeDetails: ${EMPLOYEE_DELTA_NOTIFICATION_DETAILS:true}
 
-extract:
-  csv:
-    employees:
-      dateFormat: yyyy-MM-dd
-      readyToExtractStatus: IN_PROGRESS
-      extractedStatus: EXTRACTED
+  # CSV Ingest Configuration
+  ingest:
+    dateFormat: yyyy-MM-dd
+    defaultStatus: IN_PROGRESS
+    enabled: true
+    fileFolder: ${csv.baseFolder}/ingest/employees
+    processedFolder: ${csv.baseFolder}/ingest/employees/processed
+    fileNamePrefix: employees-
+    tableName: employee 
+    columnMapping:
+      person_id: id
+      full_name: name
+      years: age
+      date_of_birth: dob
+    archive:
       enabled: true
-      fileFolder: ${csv.baseFolder}/extract/employees
-      processedFolder: ${csv.baseFolder}/extract/employees/processed
-      fileNamePrefix: employees-
-      tableName: employee 
-      columnMapping:
-        person_id: id
-        full_name: name
-        years: age
-        date_of_birth: dob
-  archive:
-    enabled: true
-  zip:
-    enabled: true
+    zip:
+      enabled: true
 
-transfer:
+  # CSV Extract Configuration
+  extract:
+    dateFormat: yyyy-MM-dd
+    readyToExtractStatus: IN_PROGRESS
+    extractedStatus: EXTRACTED
+    enabled: true
+    fileFolder: ${csv.baseFolder}/extract/employees
+    processedFolder: ${csv.baseFolder}/extract/employees/processed
+    fileNamePrefix: employees-
+    tableName: employee 
+    columnMapping:
+      person_id: id
+      full_name: name
+      years: age
+      date_of_birth: dob
+    archive:
+      enabled: true
+    zip:
+      enabled: true
+
+  # Transfer Configuration
+  transfer:
     rest:
       enabled: false
       accessTokenUrl: ${TRANSFER_REST_ACCESS_TOKEN_URL:https://api.example.com/accessToken}

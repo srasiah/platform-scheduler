@@ -1,0 +1,53 @@
+# Development configuration for employee delta detection
+# Optimized for development and testing environments
+
+spring:
+  profiles:
+    active: dev
+
+# Development Employee Configuration
+employee:
+  # Delta configuration for development
+  delta:
+    enabled: true
+    maxBatchesRetention: 20  # Keep fewer batches in development
+    batchRetentionPeriod: 30d  # Shorter retention for development
+    autoCleanupEnabled: true
+    ignoredFields: transactionId,createdDate  # Standard ignored fields
+    detectNew: true
+    detectUpdated: true
+    detectDeleted: true
+    detailedChangeLogging: true  # Full logging for development
+    
+    # Development reporting
+    reporting:
+      enabled: true
+      outputDirectory: ./.data/reports/delta
+      fileNamePrefix: dev-employee-delta-
+      generateDetailedReports: true
+      generateSummaryReports: true
+      maxRecordsPerReport: 5000  # Smaller reports for development
+      includeUnchangedFields: true  # Include all fields for development debugging
+    
+    # Development performance settings
+    performance:
+      batchSize: 500  # Smaller batches for development
+      parallelProcessing: false  # Disable parallel processing for easier debugging
+      threadPoolSize: 1  # Single thread for development
+      enableSnapshotCaching: false  # Disable caching for development testing
+      maxCacheSize: 1000
+    
+    # Development notifications (disabled by default)
+    notifications:
+      enabled: false  # No notifications in development
+      newRecordThreshold: 10
+      updatedRecordThreshold: 5
+      deletedRecordThreshold: 1
+      recipients: developer@company.com
+      includeDetails: true  # Full details when enabled
+
+# Development logging configuration
+logging:
+  level:
+    com.example.employee.service.impl.EmployeeDeltaServiceImpl: DEBUG
+    com.example.employee.delta: DEBUG

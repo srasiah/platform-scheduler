@@ -1,0 +1,47 @@
+# CI/CD Integration targets for your Makefile
+
+.PHONY: ci-build ci-test ci-security ci-deploy ci-full
+
+# Continuous Integration build pipeline
+ci-build:
+	@echo "🏗️  CI: Building application..."
+	docker build --no-cache -t $(APP_NAME):ci -f $(DOCKERFILE) .
+	@echo "✅ CI: Build completed"
+
+# Comprehensive test suite for CI
+ci-test: test-docker-build
+	@echo "🧪 CI: Running comprehensive test suite..."
+	docker run --rm $(TEST_IMAGE) mvn -B clean test
+	docker run --rm $(TEST_IMAGE) mvn -B verify
+	@echo "✅ CI: All tests passed"
+
+# Security scanning (requires tools like trivy)
+ci-security:
+	@echo "🔒 CI: Running security scans..."
+	@if command -v trivy >/dev/null 2>&1; then \
+		trivy image $(APP_NAME):ci; \
+	else \
+		echo "⚠️  Trivy not installed, skipping security scan"; \
+	fi
+
+# Production deployment
+ci-deploy:
+	@echo "🚀 CI: Deploying to production..."
+	@if [ -z "$(DEPLOY_ENV)" ]; then \
+		echo "❌ DEPLOY_ENV not set. Use: make ci-deploy DEPLOY_ENV=staging"; \
+		exit 1; \
+	fi
+	docker tag $(APP_NAME):ci $(APP_NAME):$(DEPLOY_ENV)
+	# Add your deployment logic here (k8s, AWS, etc.)
+
+# Full CI pipeline
+ci-full: ci-build ci-test ci-security
+	@echo "✅ CI: Full pipeline completed successfully"
+
+# Performance testing with your delta system
+perf-test: run-d
+	@echo "⚡ Running performance tests on delta detection..."
+	@sleep 15  # Wait for full startup
+	# Add performance test commands here
+	# Example: ab -n 1000 -c 10 http://localhost:8080/api/deltas
+	@echo "⚡ Performance test completed"

@@ -1,0 +1,5 @@
+person_id,full_name,years,status,date_of_birth
+1,John Doe,30,ACTIVE,1994-01-15
+2,Jane Smith,25,ACTIVE,1999-03-22
+3,Bob Johnson,35,INACTIVE,1989-07-08
+4,Alice Brown,28,ACTIVE,1996-11-30

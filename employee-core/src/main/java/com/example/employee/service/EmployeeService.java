@@ -10,14 +10,33 @@ import java.nio.file.Path;
 import java.util.Date;
 import java.util.UUID;
 
-public abstract class AbstractEmployeeService {
-    protected final Logger log = LoggerFactory.getLogger(getClass());
+/**
+ * Utility class providing common helper methods for employee services.
+ * This class contains static utility methods that can be used across different employee services.
+ */
+public final class EmployeeService {
+    private static final Logger log = LoggerFactory.getLogger(EmployeeService.class);
+    
+    // Private constructor to prevent instantiation
+    private EmployeeService() {
+        throw new UnsupportedOperationException("Utility class cannot be instantiated");
+    }
 
-    protected String generateBatchId() {
+    /**
+     * Generates a unique batch ID using UUID.
+     * 
+     * @return a unique batch ID string
+     */
+    public static String generateBatchId() {
         return UUID.randomUUID().toString();
     }
 
-    protected void ensureDirectoryExists(Path dir) {
+    /**
+     * Ensures that the specified directory exists, creating it if necessary.
+     * 
+     * @param dir the directory path to ensure exists
+     */
+    public static void ensureDirectoryExists(Path dir) {
         try {
             if (!Files.exists(dir)) {
                 Files.createDirectories(dir);
@@ -27,7 +46,13 @@ public abstract class AbstractEmployeeService {
         }
     }
 
-    protected void updateEmployeeStatus(Employee emp, String status) {
+    /**
+     * Updates the status of an employee if both employee and status are not null.
+     * 
+     * @param emp the employee to update
+     * @param status the new status to set
+     */
+    public static void updateEmployeeStatus(Employee emp, String status) {
         if (emp != null && status != null) {
             emp.setStatus(status);
         }
@@ -41,7 +66,7 @@ public abstract class AbstractEmployeeService {
      * @param fieldName the field name to get
      * @return the string representation of the field value, or null if not found
      */
-    protected String getFieldValue(Employee emp, String fieldName) {
+    public static String getFieldValue(Employee emp, String fieldName) {
         if (emp == null || fieldName == null) {
             return null;
         }
@@ -86,7 +111,7 @@ public abstract class AbstractEmployeeService {
      * @param cellValue the string value from CSV
      * @param batchId the batch ID (for logging)
      */
-    protected void setFieldValue(Employee emp, String fieldName, String cellValue, String batchId) {
+    public static void setFieldValue(Employee emp, String fieldName, String cellValue, String batchId) {
         if (cellValue == null || cellValue.trim().isEmpty()) {
             return;
         }
@@ -127,13 +152,12 @@ public abstract class AbstractEmployeeService {
     }
 
     /**
-     * Moves a processed CSV file to the processed directory with a timestamp
-     * suffix.
+     * Moves a processed CSV file to the processed directory with a timestamp suffix.
      * 
      * @param sourceFile   the source file to move
      * @param processedDir the target directory for processed files
      */
-    protected void moveProcessedFile(Path sourceFile, Path processedDir) {
+    public static void moveProcessedFile(Path sourceFile, Path processedDir) {
         String originalName = sourceFile.getFileName().toString();
         int dotIdx = originalName.lastIndexOf('.');
         String base = (dotIdx > 0) ? originalName.substring(0, dotIdx) : originalName;

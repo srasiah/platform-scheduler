@@ -1,6 +1,7 @@
 package com.example.employee.service;
 
 import com.example.employee.repo.EmployeeRepository;
+import com.example.employee.service.impl.EmployeeIngestServiceImpl;
 import com.example.employee.config.EmployeeCsvIngestProperties;
 import com.example.common.util.CsvUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,12 +21,14 @@ class EmployeeIngestServiceImplTest {
     private EmployeeIngestServiceImpl service;
     private EmployeeRepository employeeRepository;
     private EmployeeCsvIngestProperties props;
+    private EmployeeDeltaService deltaService;
 
     @BeforeEach
     void setUp() throws Exception {
         employeeRepository = mock(EmployeeRepository.class);
         props = mock(EmployeeCsvIngestProperties.class);
-        service = new EmployeeIngestServiceImpl(employeeRepository, props);
+        deltaService = mock(EmployeeDeltaService.class);
+        service = new EmployeeIngestServiceImpl(employeeRepository, props, deltaService);
     }
 
     @Test

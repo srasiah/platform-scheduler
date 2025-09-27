@@ -1,7 +1,10 @@
-package com.example.employee.service;
+package com.example.employee.service.impl;
 
 import com.example.employee.entity.Employee;
 import com.example.employee.repo.EmployeeRepository;
+import com.example.employee.service.EmployeeExtractService;
+import com.example.employee.service.EmployeeService;
+import com.example.employee.service.base.AbstractEmployeeService;
 import com.example.employee.config.EmployeeCsvExtractProperties;
 import com.example.common.util.CsvUtils;
 import org.slf4j.Logger;
@@ -25,9 +28,64 @@ public class EmployeeExtractServiceImpl extends AbstractEmployeeService implemen
 
     @Override
     public synchronized void extractToDirectory(Path extractDir, String readyToExtractStatus) {
-        String batchId = generateBatchId();
+        processFromDirectory(extractDir, readyToExtractStatus);
+    }
+
+    @Override
+    public void extractToDirectory() {
+        processFromDirectory();
+    }
+
+    @Override
+    public void processFromDirectory(Path extractDir, Path targetDir) {
+        // For extract service, the targetDir parameter is not used since we don't move files
+        // Use the configured ready status for extraction
+        extractToDirectory(extractDir, props.getReadyToExtractStatus());
+    }
+
+    @Override
+    public void processFromDirectory() {
+        extractToDirectory(Path.of(props.getFileFolder()), props.getReadyToExtractStatus());
+    }
+
+    @Override
+    public boolean isReadyForProcessing() {
+        try {
+            // Check if properties are properly configured
+            if (props == null || props.getFileFolder() == null) {
+                log.warn("Employee extract service not properly configured - missing properties");
+                return false;
+            }
+            
+            // Check if required directory exists or can be created
+            Path extractDir = Path.of(props.getFileFolder());
+            EmployeeService.ensureDirectoryExists(extractDir);
+            
+            // Check repository connectivity
+            if (employeeRepository == null) {
+                log.warn("Employee extract service not ready - repository not available");
+                return false;
+            }
+            
+            return true;
+        } catch (Exception e) {
+            log.error("Error checking if employee extract service is ready for processing", e);
+            return false;
+        }
+    }
+
+    @Override
+    public String getServiceDescription() {
+        return "Employee CSV Extract Service - Exports employee data to CSV files";
+    }
+
+    /**
+     * Internal method that performs the actual extraction logic
+     */
+    private synchronized void processFromDirectory(Path extractDir, String readyToExtractStatus) {
+        String batchId = EmployeeService.generateBatchId();
         log.info("Starting EmployeeExtractServiceImpl. batchId={}, Extract directory: {}", batchId, extractDir);
-        ensureDirectoryExists(extractDir);
+        EmployeeService.ensureDirectoryExists(extractDir);
         log.info("Extracting employees with status: {} (batchId={})", readyToExtractStatus, batchId);
         
         // Use repository query instead of filtering in memory
@@ -48,12 +106,12 @@ public class EmployeeExtractServiceImpl extends AbstractEmployeeService implemen
             String[] row = new String[header.length];
             for (int i = 0; i < header.length; i++) {
                 String fieldName = mapping.get(header[i]);
-                String value = getFieldValue(emp, fieldName);
+                String value = EmployeeService.getFieldValue(emp, fieldName);
                 row[i] = value != null ? value : "";
             }
             rows.add(row);
-            // Update status to extracted using abstract method
-            updateEmployeeStatus(emp, props.getExtractedStatus());
+            // Update status to extracted using utility method
+            EmployeeService.updateEmployeeStatus(emp, props.getExtractedStatus());
         }
         
         Path outputFile = extractDir.resolve(props.getFileNamePrefix() + batchId + "-" + System.currentTimeMillis() + ".csv");
@@ -64,10 +122,5 @@ public class EmployeeExtractServiceImpl extends AbstractEmployeeService implemen
         } catch (Exception e) {
             log.error("Failed to write extracted employees to file {} (batchId={})", outputFile, batchId, e);
         }
-    }
-
-    @Override
-    public void extractToDirectory() {
-        extractToDirectory(Path.of(props.getFileFolder()), props.getReadyToExtractStatus());
     }
 }

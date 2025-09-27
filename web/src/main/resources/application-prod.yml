@@ -1,0 +1,52 @@
+# Example production configuration for employee delta detection
+# This file demonstrates how to override delta settings for different environments
+
+spring:
+  profiles:
+    active: prod
+
+# Production Employee Configuration
+employee:
+  # Delta configuration optimized for production
+  delta:
+    enabled: true
+    maxBatchesRetention: 200  # Keep more batches in production
+    batchRetentionPeriod: 180d  # Keep data for 6 months in production
+    autoCleanupEnabled: true
+    ignoredFields: transactionId,createdDate,lastModified  # Additional ignored fields
+    detectNew: true
+    detectUpdated: true
+    detectDeleted: true
+    detailedChangeLogging: true
+    
+    # Enhanced reporting for production
+    reporting:
+      enabled: true
+      outputDirectory: /data/reports/employee-delta
+      fileNamePrefix: prod-employee-delta-
+      generateDetailedReports: true
+      generateSummaryReports: true
+      maxRecordsPerReport: 25000  # Larger reports for production
+      includeUnchangedFields: false
+    
+    # Performance optimized for production load
+    performance:
+      batchSize: 2000  # Larger batches for better performance
+      parallelProcessing: true
+      threadPoolSize: 4  # Fixed thread pool size for production
+      enableSnapshotCaching: true
+      maxCacheSize: 100000  # Larger cache for production
+    
+    # Production notifications
+    notifications:
+      enabled: true
+      newRecordThreshold: 500  # Higher thresholds for production alerts
+      updatedRecordThreshold: 200
+      deletedRecordThreshold: 50
+      recipients: admin@company.com,ops-team@company.com
+      includeDetails: false  # Summary only for production alerts
+
+# Example staging configuration would be similar but with different values
+# employee.delta.notifications.recipients: staging-team@company.com
+# employee.delta.performance.batchSize: 1000
+# employee.delta.maxBatchesRetention: 50

@@ -1,0 +1,53 @@
+# Additional Makefile targets specifically for your delta detection system
+
+.PHONY: delta-demo delta-report delta-batch-status migration-status
+
+# Demo the delta detection system with test data
+delta-demo: run-d
+	@echo "🎬 Starting delta detection demo..."
+	@sleep 10  # Wait for app to start
+	@echo "📤 Uploading initial employee data..."
+	@curl -X POST http://localhost:8080/api/employee-ingest/upload \
+		-F "file=@test-data/emp-initial.csv" \
+		-H "Content-Type: multipart/form-data" || true
+	@sleep 5
+	@echo "📤 Uploading updated employee data..."
+	@curl -X POST http://localhost:8080/api/employee-ingest/upload \
+		-F "file=@test-data/emp-updated.csv" \
+		-H "Content-Type: multipart/form-data" || true
+	@echo "📊 Checking delta results..."
+	@sleep 3
+	@curl -s http://localhost:8080/api/deltas | jq . || curl -s http://localhost:8080/api/deltas
+	@echo "✅ Delta demo completed!"
+
+# Generate and download delta reports
+delta-report:
+	@echo "📋 Generating delta reports..."
+	@curl -s -X POST http://localhost:8080/api/delta-reports/generate || echo "❌ Failed to generate reports"
+	@echo "📥 Reports should be available in the configured output directory"
+
+# Check the status of recent ingest batches
+delta-batch-status:
+	@echo "📊 Recent ingest batch status:"
+	@curl -s http://localhost:8080/api/delta-batches?limit=5 | jq . || curl -s http://localhost:8080/api/delta-batches?limit=5
+
+# Check database migration status
+migration-status:
+	@echo "🗄️  Database migration status:"
+	@$(COMPOSE) exec db psql -U scheduler -d scheduler -c "SELECT version, description, installed_on FROM flyway_schema_history ORDER BY installed_rank DESC LIMIT 5;" || echo "❌ Cannot connect to database"
+
+# Reset delta data (for development/testing)
+delta-reset:
+	@echo "⚠️  WARNING: This will delete all delta detection data!"
+	@echo "Press Ctrl+C to cancel, or Enter to continue..."
+	@read dummy
+	@$(COMPOSE) exec db psql -U scheduler -d scheduler -c "DELETE FROM employee_delta; DELETE FROM employee_snapshot; DELETE FROM employee_ingest_batch;" || echo "❌ Failed to reset data"
+	@echo "🧹 Delta data reset completed"
+
+# Quick health check for the entire system
+health-check:
+	@echo "🏥 System Health Check:"
+	@echo "Database: $$(curl -s http://localhost:8080/actuator/health/db 2>/dev/null | jq -r '.status' || echo '❌ DOWN')"
+	@echo "Application: $$(curl -s http://localhost:8080/actuator/health 2>/dev/null | jq -r '.status' || echo '❌ DOWN')"
+	@echo "Delta Service: $$(curl -s http://localhost:8080/api/delta-config/validation 2>/dev/null | jq -r '.status' || echo '❌ DOWN')"
+	@echo "Recent Batches: $$(curl -s http://localhost:8080/api/delta-batches/count 2>/dev/null || echo '❌ Cannot fetch')"

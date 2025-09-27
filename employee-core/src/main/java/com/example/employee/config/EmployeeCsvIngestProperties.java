@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Component
-@ConfigurationProperties(prefix = "ingest.csv.employees")
+@ConfigurationProperties(prefix = "employee.ingest")
 public class EmployeeCsvIngestProperties extends AbstractEmployeeCsvProperties {
     // Inherits all properties from EmployeeCsvProperties
     /** Status of the CSV processing. */

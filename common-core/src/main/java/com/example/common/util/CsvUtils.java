@@ -150,4 +150,53 @@ public class CsvUtils {
             throw new IOException("Error writing CSV file: " + filePath, e);
         }
     }
+
+    /**
+     * Writes a list of map records to a CSV file with the specified separator.
+     * The header row is generated from the keys of the first map.
+     * @param mapRecords List of Map<String, String> records
+     * @param filePath Path to the CSV file
+     * @param separator The separator character
+     * @throws IOException if writing fails
+     */
+    public static void writeCsvFile(List<Map<String, String>> mapRecords, Path filePath, char separator) throws IOException {
+        log.info("Writing CSV file: {} ({} records) with separator '{}'", filePath, 
+                mapRecords != null ? mapRecords.size() : 0, separator);
+        
+        if (mapRecords == null || mapRecords.isEmpty()) {
+            log.warn("No data to write to CSV file: {}", filePath);
+            // Create empty file
+            Files.createDirectories(filePath.getParent());
+            Files.createFile(filePath);
+            return;
+        }
+        
+        // Ensure parent directory exists
+        Files.createDirectories(filePath.getParent());
+        
+        try (CSVWriter writer = new CSVWriter(Files.newBufferedWriter(filePath),
+                separator, CSVWriter.DEFAULT_QUOTE_CHARACTER, 
+                CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END)) {
+            
+            // Get headers from first record
+            Map<String, String> firstRecord = mapRecords.get(0);
+            String[] headers = firstRecord.keySet().toArray(new String[0]);
+            writer.writeNext(headers);
+            
+            // Write data rows
+            for (Map<String, String> record : mapRecords) {
+                String[] values = new String[headers.length];
+                for (int i = 0; i < headers.length; i++) {
+                    values[i] = record.getOrDefault(headers[i], "");
+                }
+                writer.writeNext(values);
+            }
+            
+            log.info("Successfully wrote {} records to CSV file: {}", mapRecords.size(), filePath);
+            
+        } catch (Exception e) {
+            log.error("Error writing CSV file: {}", filePath, e);
+            throw new IOException("Error writing CSV file: " + filePath, e);
+        }
+    }
 }
