@@ -1,0 +1,6 @@
+person_id,full_name,years,status,date_of_birth
+1,John Doe,31,ACTIVE,1994-01-15
+2,Jane Smith,25,INACTIVE,1999-03-22
+4,Alice Brown,28,ACTIVE,1996-11-30
+5,Charlie Wilson,40,ACTIVE,1984-05-12
+6,Diana Miller,33,ACTIVE,1991-09-18

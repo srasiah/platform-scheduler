@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Component
-@ConfigurationProperties(prefix = "extract.csv.employees")
+@ConfigurationProperties(prefix = "employee.extract")
 public class EmployeeCsvExtractProperties extends AbstractEmployeeCsvProperties {
     // Inherits all properties from EmployeeCsvProperties
     private String readyToExtractStatus; // Status to filter employees for extraction
