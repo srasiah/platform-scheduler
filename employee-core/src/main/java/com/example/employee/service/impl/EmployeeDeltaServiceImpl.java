@@ -99,7 +99,13 @@ public class EmployeeDeltaServiceImpl implements EmployeeDeltaService {
         EmployeeIngestBatch previousBatch = getPreviousBatch(currentBatchId);
         if (previousBatch == null) {
             log.info("No previous batch found. All {} employees will be marked as NEW.", currentSnapshots.size());
-            return createNewEmployeeDeltas(currentSnapshots, currentBatchId, null);
+            List<EmployeeDelta> newDeltas = createNewEmployeeDeltas(currentSnapshots, currentBatchId, null);
+            if (!newDeltas.isEmpty()) {
+                deltaRepository.saveAll(newDeltas);
+                log.info("Detected and saved {} deltas for batch: {} (NEW: {}, UPDATED: 0, DELETED: 0)",
+                        newDeltas.size(), currentBatchId, newDeltas.size());
+            }
+            return newDeltas;
         }
         
         log.info("Comparing with previous batch: {}", previousBatch.getBatchId());

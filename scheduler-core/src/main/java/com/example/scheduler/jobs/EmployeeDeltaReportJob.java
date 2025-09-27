@@ -1,5 +1,6 @@
 package com.example.scheduler.jobs;
 
+import com.example.employee.config.EmployeeDeltaProperties;
 import com.example.employee.entity.EmployeeDelta;
 import com.example.employee.entity.EmployeeIngestBatch;
 import com.example.employee.service.EmployeeDeltaService;
@@ -26,18 +27,29 @@ public class EmployeeDeltaReportJob implements Job {
     
     private static final Logger log = LoggerFactory.getLogger(EmployeeDeltaReportJob.class);
     private final EmployeeDeltaService deltaService;
+    private final EmployeeDeltaProperties deltaProperties;
     
-    // Configuration - these could be moved to properties
-    private final String reportOutputDir = "./.data/reports/deltas";
-    
-    public EmployeeDeltaReportJob(EmployeeDeltaService deltaService) {
+    public EmployeeDeltaReportJob(EmployeeDeltaService deltaService, EmployeeDeltaProperties deltaProperties) {
         this.deltaService = deltaService;
+        this.deltaProperties = deltaProperties;
     }
     
     @Override
     public void execute(JobExecutionContext context) {
         String jobName = context.getJobDetail().getKey().getName();
         String jobGroup = context.getJobDetail().getKey().getGroup();
+        
+        // Check if delta detection and reporting are enabled
+        if (!deltaProperties.isEnabled()) {
+            log.info("Delta detection is disabled. Skipping Employee Delta Report Job: {} - {}", jobGroup, jobName);
+            return;
+        }
+        
+        if (!deltaProperties.getReporting().isEnabled()) {
+            log.info("Delta reporting is disabled. Skipping Employee Delta Report Job: {} - {}", jobGroup, jobName);
+            return;
+        }
+        
         log.info("Starting Employee Delta Report Job: {} - {}", jobGroup, jobName);
         
         try {
@@ -59,22 +71,27 @@ public class EmployeeDeltaReportJob implements Job {
         String batchId = recentBatch.getBatchId();
         log.info("Generating delta reports for batch: {}", batchId);
         
-        // Create reports directory
-        Path reportsDir = Paths.get(reportOutputDir);
+        // Create reports directory using configuration
+        String outputDirectory = deltaProperties.getReporting().getOutputDirectory();
+        Path reportsDir = Paths.get(outputDirectory);
         if (!Files.exists(reportsDir)) {
             Files.createDirectories(reportsDir);
+            log.info("Created reports directory: {}", reportsDir.toAbsolutePath());
         }
         
         // Generate timestamp for filenames
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         
-        // Generate summary report
-        generateSummaryReport(batchId, reportsDir, timestamp);
+        // Generate reports based on configuration
+        if (deltaProperties.getReporting().isGenerateSummaryReports()) {
+            generateSummaryReport(batchId, reportsDir, timestamp);
+        }
         
-        // Generate detailed delta reports
-        generateDetailedDeltaReports(batchId, reportsDir, timestamp);
+        if (deltaProperties.getReporting().isGenerateDetailedReports()) {
+            generateDetailedDeltaReports(batchId, reportsDir, timestamp);
+        }
         
-        log.info("Delta reports generated successfully for batch: {}", batchId);
+        log.info("Delta reports generated successfully for batch: {} in directory: {}", batchId, reportsDir.toAbsolutePath());
     }
     
     private void generateSummaryReport(String batchId, Path reportsDir, String timestamp) throws Exception {
@@ -92,9 +109,12 @@ public class EmployeeDeltaReportJob implements Job {
             )
         );
         
-        Path summaryFile = reportsDir.resolve(String.format("delta_summary_%s_%s.csv", batchId, timestamp));
+        String filePrefix = deltaProperties.getReporting().getFileNamePrefix();
+        String filename = String.format("%ssummary_%s_%s.csv", filePrefix, batchId, timestamp);
+        Path summaryFile = reportsDir.resolve(filename);
+        
         CsvUtils.writeCsvFile(summaryData, summaryFile, ',');
-        log.info("Generated summary report: {}", summaryFile);
+        log.info("Generated summary report: {}", summaryFile.toAbsolutePath());
     }
     
     private void generateDetailedDeltaReports(String batchId, Path reportsDir, String timestamp) throws Exception {
@@ -119,17 +139,26 @@ public class EmployeeDeltaReportJob implements Job {
             return;
         }
         
+        // Check if we need to limit records per report
+        int maxRecords = deltaProperties.getReporting().getMaxRecordsPerReport();
+        if (maxRecords > 0 && deltas.size() > maxRecords) {
+            log.warn("Delta report for {} employees exceeds max records per report ({} > {}). Truncating to {} records.", 
+                    deltaType, deltas.size(), maxRecords, maxRecords);
+            deltas = deltas.subList(0, maxRecords);
+        }
+        
         // Convert deltas to CSV format
         List<Map<String, String>> csvData = deltas.stream()
                 .map(this::deltaToCsvRow)
                 .collect(Collectors.toList());
         
-        String filename = String.format("deltas_%s_%s_%s.csv", 
-                deltaType.name().toLowerCase(), batchId, timestamp);
+        String filePrefix = deltaProperties.getReporting().getFileNamePrefix();
+        String filename = String.format("%s%s_%s_%s.csv", 
+                filePrefix, deltaType.name().toLowerCase(), batchId, timestamp);
         Path reportFile = reportsDir.resolve(filename);
         
         CsvUtils.writeCsvFile(csvData, reportFile, ',');
-        log.info("Generated {} employees report: {} ({} records)", deltaType, reportFile, deltas.size());
+        log.info("Generated {} employees report: {} ({} records)", deltaType, reportFile.toAbsolutePath(), deltas.size());
     }
     
     private void generateCombinedDeltaReport(String batchId, Path reportsDir, String timestamp) throws Exception {
@@ -140,42 +169,58 @@ public class EmployeeDeltaReportJob implements Job {
             return;
         }
         
+        // Check if we need to limit records per report
+        int maxRecords = deltaProperties.getReporting().getMaxRecordsPerReport();
+        if (maxRecords > 0 && allDeltas.size() > maxRecords) {
+            log.warn("Combined delta report exceeds max records per report ({} > {}). Truncating to {} records.", 
+                    allDeltas.size(), maxRecords, maxRecords);
+            allDeltas = allDeltas.subList(0, maxRecords);
+        }
+        
         // Convert all deltas to CSV format
         List<Map<String, String>> csvData = allDeltas.stream()
                 .map(this::deltaToCsvRow)
                 .collect(Collectors.toList());
         
-        String filename = String.format("deltas_all_%s_%s.csv", batchId, timestamp);
+        String filePrefix = deltaProperties.getReporting().getFileNamePrefix();
+        String filename = String.format("%sall_%s_%s.csv", filePrefix, batchId, timestamp);
         Path reportFile = reportsDir.resolve(filename);
         
         CsvUtils.writeCsvFile(csvData, reportFile, ',');
-        log.info("Generated combined deltas report: {} ({} records)", reportFile, allDeltas.size());
+        log.info("Generated combined deltas report: {} ({} records)", reportFile.toAbsolutePath(), allDeltas.size());
     }
     
     private Map<String, String> deltaToCsvRow(EmployeeDelta delta) {
         Map<String, String> row = new LinkedHashMap<>();
+        boolean includeUnchanged = deltaProperties.getReporting().isIncludeUnchangedFields();
         
-        // Basic information
+        // Basic information - always included
         row.put("employee_id", String.valueOf(delta.getEmployeeId()));
         row.put("batch_id", delta.getBatchId());
         row.put("previous_batch_id", delta.getPreviousBatchId() != null ? delta.getPreviousBatchId() : "");
         row.put("delta_type", delta.getDeltaType().name());
         row.put("detected_date", delta.getDetectedDate() != null ? delta.getDetectedDate().toString() : "");
         
-        // Previous values
-        row.put("previous_name", delta.getPreviousName() != null ? delta.getPreviousName() : "");
-        row.put("previous_age", delta.getPreviousAge() != null ? String.valueOf(delta.getPreviousAge()) : "");
-        row.put("previous_status", delta.getPreviousStatus() != null ? delta.getPreviousStatus() : "");
-        row.put("previous_dob", delta.getPreviousDob() != null ? delta.getPreviousDob().toString() : "");
+        // Previous values - include based on configuration and delta type
+        if (includeUnchanged || delta.getDeltaType() == EmployeeDelta.DeltaType.UPDATED || delta.getDeltaType() == EmployeeDelta.DeltaType.DELETED) {
+            row.put("previous_name", delta.getPreviousName() != null ? delta.getPreviousName() : "");
+            row.put("previous_age", delta.getPreviousAge() != null ? String.valueOf(delta.getPreviousAge()) : "");
+            row.put("previous_status", delta.getPreviousStatus() != null ? delta.getPreviousStatus() : "");
+            row.put("previous_dob", delta.getPreviousDob() != null ? delta.getPreviousDob().toString() : "");
+        }
         
-        // Current values
-        row.put("current_name", delta.getCurrentName() != null ? delta.getCurrentName() : "");
-        row.put("current_age", delta.getCurrentAge() != null ? String.valueOf(delta.getCurrentAge()) : "");
-        row.put("current_status", delta.getCurrentStatus() != null ? delta.getCurrentStatus() : "");
-        row.put("current_dob", delta.getCurrentDob() != null ? delta.getCurrentDob().toString() : "");
+        // Current values - include based on configuration and delta type  
+        if (includeUnchanged || delta.getDeltaType() == EmployeeDelta.DeltaType.NEW || delta.getDeltaType() == EmployeeDelta.DeltaType.UPDATED) {
+            row.put("current_name", delta.getCurrentName() != null ? delta.getCurrentName() : "");
+            row.put("current_age", delta.getCurrentAge() != null ? String.valueOf(delta.getCurrentAge()) : "");
+            row.put("current_status", delta.getCurrentStatus() != null ? delta.getCurrentStatus() : "");
+            row.put("current_dob", delta.getCurrentDob() != null ? delta.getCurrentDob().toString() : "");
+        }
         
-        // Change metadata
-        row.put("changed_fields", delta.getChangedFields() != null ? delta.getChangedFields() : "");
+        // Change metadata - always included for UPDATED records
+        if (delta.getDeltaType() == EmployeeDelta.DeltaType.UPDATED) {
+            row.put("changed_fields", delta.getChangedFields() != null ? delta.getChangedFields() : "");
+        }
         row.put("change_summary", delta.getChangeSummary() != null ? delta.getChangeSummary() : "");
         
         return row;
