@@ -1,0 +1,19 @@
+package com.example.employee.config;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+/**
+ * Configuration properties for extracting employee CSV files.
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Component
+@ConfigurationProperties(prefix = "employee.extract")
+public class EmployeeCsvExtractProperties extends AbstractEmployeeCsvProperties {
+    // Inherits all properties from EmployeeCsvProperties
+    private String readyToExtractStatus; // Status to filter employees for extraction
+    private String extractedStatus;
+}

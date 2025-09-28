@@ -1,0 +1,2 @@
+ALTER TABLE employee ADD COLUMN batch_id VARCHAR(255);
+

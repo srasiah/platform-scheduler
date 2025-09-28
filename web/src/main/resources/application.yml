@@ -1,0 +1,189 @@
+csv:
+  baseFolder: ${CSV_BASE_FOLDER:./.data}
+  archive:
+    enabled: true
+  zip:
+    enabled: true
+
+certs:
+  folder: ${CERTS_FOLDER:./.certs}
+  password: ${CERTS_PASSWORD:changeit}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/scheduler}
+    username: ${SPRING_DATASOURCE_USERNAME:scheduler}
+    password: ${SPRING_DATASOURCE_PASSWORD:scheduler}
+    hikari:
+      pool-name: HikariPool-Scheduler
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      leak-detection-threshold: 60000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+      hibernate.jdbc.lob.non_contextual_creation: true
+      # If you use a custom schema, uncomment:
+      # hibernate.default_schema: scheduler_app
+  flyway:
+    enabled: true
+    # If DB already has data/schema, baseline to avoid errors on first run:
+    # baseline-on-migrate: true
+    # If you use a custom schema, keep Flyway/Hibernate/Quartz consistent:
+    # schemas: [scheduler_app]
+    # default-schema: scheduler_app
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      # Let Flyway manage Quartz tables; don't auto-create:
+      initialize-schema: never
+    properties:
+      org.quartz.scheduler.instanceName: scheduler-platform
+      org.quartz.scheduler.instanceId: AUTO
+      org.quartz.scheduler.skipUpdateCheck: true
+
+      org.quartz.threadPool.threadCount: 10
+
+      org.quartz.jobStore.class: org.springframework.scheduling.quartz.LocalDataSourceJobStore
+      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+      org.quartz.jobStore.misfireThreshold: 60000
+      # Enable if running >1 app instance:
+      # org.quartz.jobStore.isClustered: true
+      # org.quartz.jobStore.clusterCheckinInterval: 15000
+      # Use a prefix and (optionally) schema:
+      # org.quartz.jobStore.tablePrefix: QRTZ_
+      # or, with schema:
+      # org.quartz.jobStore.tablePrefix: scheduler_app.QRTZ_
+      # Recommended on Postgres to reduce deadlocks under load:
+      # org.quartz.jobStore.acquireTriggersWithinLock: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui
+  api-docs:
+    path: /v3/api-docs
+
+logging:
+  level:
+    org.springframework: INFO
+    com.zaxxer.hikari.HikariConfig: INFO
+    com.zaxxer.hikari: INFO
+    org.springframework.jdbc.datasource: DEBUG
+
+# Employee Configuration
+employee:
+  # Delta Detection Configuration
+  delta:
+    enabled: ${EMPLOYEE_DELTA_ENABLED:true}
+    maxBatchesRetention: ${EMPLOYEE_DELTA_MAX_BATCHES:100}
+    batchRetentionPeriod: ${EMPLOYEE_DELTA_RETENTION_DAYS:90d}
+    autoCleanupEnabled: ${EMPLOYEE_DELTA_AUTO_CLEANUP:true}
+    ignoredFields: ${EMPLOYEE_DELTA_IGNORED_FIELDS:transactionId,createdDate}
+    detectNew: ${EMPLOYEE_DELTA_DETECT_NEW:true}
+    detectUpdated: ${EMPLOYEE_DELTA_DETECT_UPDATED:true}
+    detectDeleted: ${EMPLOYEE_DELTA_DETECT_DELETED:true}
+    detailedChangeLogging: ${EMPLOYEE_DELTA_DETAILED_LOGGING:true}
+    
+    # Delta Reporting Configuration
+    reporting:
+      enabled: ${EMPLOYEE_DELTA_REPORTING_ENABLED:true}
+      outputDirectory: ${EMPLOYEE_DELTA_REPORT_DIR:${csv.baseFolder}/reports/delta}
+      fileNamePrefix: ${EMPLOYEE_DELTA_REPORT_PREFIX:employee-delta-report-}
+      generateDetailedReports: ${EMPLOYEE_DELTA_DETAILED_REPORTS:true}
+      generateSummaryReports: ${EMPLOYEE_DELTA_SUMMARY_REPORTS:true}
+      maxRecordsPerReport: ${EMPLOYEE_DELTA_MAX_RECORDS_PER_REPORT:10000}
+      includeUnchangedFields: ${EMPLOYEE_DELTA_INCLUDE_UNCHANGED:false}
+    
+    # Performance Configuration
+    performance:
+      batchSize: ${EMPLOYEE_DELTA_BATCH_SIZE:1000}
+      parallelProcessing: ${EMPLOYEE_DELTA_PARALLEL:true}
+      threadPoolSize: ${EMPLOYEE_DELTA_THREAD_POOL:0}
+      enableSnapshotCaching: ${EMPLOYEE_DELTA_ENABLE_CACHE:true}
+      maxCacheSize: ${EMPLOYEE_DELTA_MAX_CACHE:50000}
+    
+    # Notification Configuration
+    notifications:
+      enabled: ${EMPLOYEE_DELTA_NOTIFICATIONS_ENABLED:false}
+      newRecordThreshold: ${EMPLOYEE_DELTA_NEW_THRESHOLD:100}
+      updatedRecordThreshold: ${EMPLOYEE_DELTA_UPDATED_THRESHOLD:50}
+      deletedRecordThreshold: ${EMPLOYEE_DELTA_DELETED_THRESHOLD:10}
+      recipients: ${EMPLOYEE_DELTA_NOTIFICATION_EMAILS:}
+      includeDetails: ${EMPLOYEE_DELTA_NOTIFICATION_DETAILS:true}
+
+  # CSV Ingest Configuration
+  ingest:
+    preferredDateFormat: yyyy-MM-dd
+    defaultStatus: IN_PROGRESS
+    enabled: true
+    fileFolder: ${csv.baseFolder}/ingest/employees
+    processedFolder: ${csv.baseFolder}/ingest/employees/processed
+    fileNamePrefix: employees-
+    tableName: employee 
+    columnMapping:
+      person_id: id
+      full_name: name
+      years: age
+      date_of_birth: dob
+    archive:
+      enabled: true
+    zip:
+      enabled: true
+
+  # CSV Extract Configuration
+  extract:
+    preferredDateFormat: yyyy-MM-dd
+    readyToExtractStatus: IN_PROGRESS
+    extractedStatus: EXTRACTED
+    enabled: true
+    fileFolder: ${csv.baseFolder}/extract/employees
+    processedFolder: ${csv.baseFolder}/extract/employees/processed
+    fileNamePrefix: employees-
+    tableName: employee 
+    columnMapping:
+      person_id: id
+      full_name: name
+      years: age
+      date_of_birth: dob
+    archive:
+      enabled: true
+    zip:
+      enabled: true
+
+  # Transfer Configuration
+  transfer:
+    rest:
+      enabled: false
+      accessTokenUrl: ${TRANSFER_REST_ACCESS_TOKEN_URL:https://api.example.com/accessToken}
+      username: ${TRANSFER_REST_ACCESS_TOKEN_USERNAME:apiuser}
+      password: ${TRANSFER_REST_ACCESS_TOKEN_PASSWORD:apipass}
+      cert:
+        path: ${TRANSFER_REST_ACCESS_TOKEN_CERT_PATH:${certs.folder}/client.p12}
+        password: ${TRANSFER_REST_ACCESS_TOKEN_CERT_PASSWORD:${certs.password}}
+    sftp:
+      enabled: false
+      host: ${TRANSFER_SFTP_HOST:localhost}
+      port: ${TRANSFER_SFTP_PORT:22}
+      username: ${TRANSFER_SFTP_USERNAME:sftpuser}
+      password: ${TRANSFER_SFTP_PASSWORD:sftppass}
+      remoteDirectory: /uploads
