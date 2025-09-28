@@ -107,11 +107,29 @@ public final class EmployeeService {
      * Handles type conversion for different field types.
      * 
      * @param emp the Employee object
+    /**
+     * Sets a field value on an Employee object with type conversion.
+     * Uses default date format fallback for date fields.
+     * 
+     * @param emp the employee object
      * @param fieldName the field name to set
      * @param cellValue the string value from CSV
      * @param batchId the batch ID (for logging)
      */
     public static void setFieldValue(Employee emp, String fieldName, String cellValue, String batchId) {
+        setFieldValue(emp, fieldName, cellValue, batchId, null);
+    }
+    
+    /**
+     * Sets a field value on an Employee object with type conversion.
+     * 
+     * @param emp the employee object
+     * @param fieldName the field name to set
+     * @param cellValue the string value from CSV
+     * @param batchId the batch ID (for logging)
+     * @param preferredDateFormat preferred date format to try first for date fields (can be null)
+     */
+    public static void setFieldValue(Employee emp, String fieldName, String cellValue, String batchId, String preferredDateFormat) {
         if (cellValue == null || cellValue.trim().isEmpty()) {
             return;
         }
@@ -130,10 +148,14 @@ public final class EmployeeService {
             } else if (fieldType == Integer.class || fieldType == int.class) {
                 value = Integer.parseInt(cellValue.trim());
             } else if (fieldType == Date.class) {
-                value = DateUtils.parseDateWithFallback(cellValue.trim(), "yyyy-MM-dd");
+                // Use preferred date format if provided, otherwise fall back to yyyy-MM-dd
+                String dateFormatToUse = (preferredDateFormat != null && !preferredDateFormat.isBlank()) 
+                    ? preferredDateFormat 
+                    : "yyyy-MM-dd";
+                value = DateUtils.parseDateWithFallback(cellValue.trim(), dateFormatToUse);
                 if (value != null) {
-                    log.debug("Parsed date '{}' to '{}' for field '{}' (batchId={})", 
-                              cellValue, value, fieldName, batchId);
+                    log.debug("Parsed date '{}' to '{}' for field '{}' using format '{}' (batchId={})", 
+                              cellValue, value, fieldName, dateFormatToUse, batchId);
                 }
             } else {
                 log.warn("Unsupported field type {} for field {} (batchId={})", 

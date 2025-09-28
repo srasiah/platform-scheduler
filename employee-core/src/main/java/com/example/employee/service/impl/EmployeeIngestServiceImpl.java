@@ -165,7 +165,7 @@ public class EmployeeIngestServiceImpl extends AbstractEmployeeService implement
                 props.getColumnMapping().forEach((csvCol, fieldName) -> {
                     String cellValue = csvRow.get(csvCol);
                     try {
-                        EmployeeService.setFieldValue(emp, fieldName, cellValue, batchId);
+                        EmployeeService.setFieldValue(emp, fieldName, cellValue, batchId, props.getPreferredDateFormat());
                     } catch (Exception ex) {
                         log.warn("Failed to set field {} from column {} (batchId={})", fieldName, csvCol, batchId, ex);
                     }

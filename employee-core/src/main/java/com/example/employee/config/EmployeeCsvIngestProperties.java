@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "employee.ingest")
 public class EmployeeCsvIngestProperties extends AbstractEmployeeCsvProperties {
-    // Inherits all properties from EmployeeCsvProperties
+    // Inherits all properties from AbstractEmployeeCsvProperties including preferredDateFormat
     /** Status of the CSV processing. */
     private String defaultStatus;
 }

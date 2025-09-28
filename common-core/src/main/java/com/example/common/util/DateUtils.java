@@ -19,10 +19,15 @@ public class DateUtils {
     private static final SimpleDateFormat[] COMMON_DATE_FORMATS = {
         new SimpleDateFormat("yyyy-MM-dd"),    // ISO format: 1990-05-15
         new SimpleDateFormat("MM/dd/yyyy"),    // US format: 05/15/1990  
+        new SimpleDateFormat("M/d/yyyy"),      // US format with single digits: 5/15/1990
         new SimpleDateFormat("dd/MM/yyyy"),    // European format: 15/05/1990
+        new SimpleDateFormat("d/M/yyyy"),      // European format with single digits: 15/5/1990
         new SimpleDateFormat("yyyy/MM/dd"),    // Alternative format: 1990/05/15
+        new SimpleDateFormat("yyyy/M/d"),      // Alternative format with single digits: 1990/5/15
         new SimpleDateFormat("dd-MM-yyyy"),    // Dash European: 15-05-1990
-        new SimpleDateFormat("MM-dd-yyyy")     // Dash US: 05-15-1990
+        new SimpleDateFormat("d-M-yyyy"),      // Dash European with single digits: 15-5-1990
+        new SimpleDateFormat("MM-dd-yyyy"),    // Dash US: 05-15-1990
+        new SimpleDateFormat("M-d-yyyy")       // Dash US with single digits: 5-15-1990
     };
     
     /**
@@ -93,7 +98,7 @@ public class DateUtils {
         try {
             SimpleDateFormat formatter = new SimpleDateFormat(dateFormat);
             return formatter.parse(trimmedValue);
-        } catch (ParseException pe) {
+        } catch (ParseException | IllegalArgumentException e) {
             log.warn("Could not parse date value '{}' using format '{}'", dateValue, dateFormat);
             return null;
         }

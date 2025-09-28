@@ -133,7 +133,7 @@ employee:
 
   # CSV Ingest Configuration
   ingest:
-    dateFormat: yyyy-MM-dd
+    preferredDateFormat: yyyy-MM-dd
     defaultStatus: IN_PROGRESS
     enabled: true
     fileFolder: ${csv.baseFolder}/ingest/employees
@@ -152,7 +152,7 @@ employee:
 
   # CSV Extract Configuration
   extract:
-    dateFormat: yyyy-MM-dd
+    preferredDateFormat: yyyy-MM-dd
     readyToExtractStatus: IN_PROGRESS
     extractedStatus: EXTRACTED
     enabled: true

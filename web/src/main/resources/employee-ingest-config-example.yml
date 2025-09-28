@@ -1,0 +1,43 @@
+# Example Application Configuration for Employee Ingest with Preferred Date Format
+
+## This example shows how to configure the preferredDateFormat property
+## for employee CSV ingest operations.
+
+employee:
+  ingest:
+    enabled: true
+    fileFolder: "/data/ingest/employees"
+    processedFolder: "/data/processed/employees"
+    fileNamePrefix: "emp-"
+    defaultStatus: "ACTIVE"
+    
+    # Preferred date format to try first when parsing dates from CSV files
+    # This format will be tried first before falling back to DateUtils default formats
+    # Common examples:
+    # - "M/d/yyyy"      -> 5/12/1967 (single-digit month/day)
+    # - "MM/dd/yyyy"    -> 05/12/1967 (zero-padded month/day)
+    # - "yyyy-MM-dd"    -> 1967-05-12 (ISO format)
+    # - "dd/MM/yyyy"    -> 12/05/1967 (European format)
+    # - "d/M/yyyy"      -> 12/5/1967 (European single-digit)
+    preferredDateFormat: "M/d/yyyy"
+    
+    # Column mapping from CSV headers to Employee entity fields
+    columnMapping:
+      person_id: "id"
+      full_name: "name"
+      birth_date: "dob"    # This field will use preferredDateFormat for parsing
+      employee_age: "age"
+      current_status: "status"
+
+## How it works:
+## 1. When processing CSV files, the system encounters date fields (like "dob")
+## 2. It first tries to parse using the preferredDateFormat ("M/d/yyyy" in this example)
+## 3. If that fails, it falls back to all the DateUtils default formats:
+##    - yyyy-MM-dd, MM/dd/yyyy, M/d/yyyy, dd/MM/yyyy, d/M/yyyy, etc.
+## 4. This gives you control over the primary date format while maintaining flexibility
+
+## Benefits:
+## - Faster parsing when your CSV consistently uses a specific date format
+## - Better error messages and logging when the preferred format is used
+## - Maintains backward compatibility with existing CSV files that use different formats
+## - No breaking changes - if preferredDateFormat is not set, behavior remains the same
