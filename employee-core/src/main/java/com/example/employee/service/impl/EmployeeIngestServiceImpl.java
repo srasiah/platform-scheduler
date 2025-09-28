@@ -228,12 +228,21 @@ public class EmployeeIngestServiceImpl extends AbstractEmployeeService implement
             // Get delta summary
             var summary = deltaService.getDeltaSummary(batchId);
             
-            // Update batch with final results
-            deltaService.updateIngestBatch(batchId, EmployeeIngestBatch.IngestStatus.COMPLETED,
-                                         totalProcessed, newRecordsCount, summary.getUpdatedEmployees(), null);
-            
-            log.info("Delta detection completed for batch: {} - NEW: {}, UPDATED: {}, DELETED: {}", 
-                    batchId, summary.getNewEmployees(), summary.getUpdatedEmployees(), summary.getDeletedEmployees());
+            if (summary != null) {
+                // Update batch with final results
+                deltaService.updateIngestBatch(batchId, EmployeeIngestBatch.IngestStatus.COMPLETED,
+                                             totalProcessed, newRecordsCount, summary.getUpdatedEmployees(), null);
+                
+                log.info("Delta detection completed for batch: {} - NEW: {}, UPDATED: {}, DELETED: {}", 
+                        batchId, summary.getNewEmployees(), summary.getUpdatedEmployees(), summary.getDeletedEmployees());
+            } else {
+                // Handle case where summary is null
+                log.warn("Delta summary is null for batch: {}. Updating batch with zero counts.", batchId);
+                deltaService.updateIngestBatch(batchId, EmployeeIngestBatch.IngestStatus.COMPLETED,
+                                             totalProcessed, newRecordsCount, 0, null);
+                
+                log.info("Delta detection completed for batch: {} - Summary unavailable", batchId);
+            }
             
         } catch (Exception e) {
             log.error("Error during delta detection for batch: {}", batchId, e);
