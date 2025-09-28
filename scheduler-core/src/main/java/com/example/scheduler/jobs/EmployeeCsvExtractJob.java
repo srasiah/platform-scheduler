@@ -2,6 +2,7 @@ package com.example.scheduler.jobs;
 
 import com.example.employee.config.EmployeeCsvExtractProperties;
 import com.example.employee.service.EmployeeExtractService;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.springframework.stereotype.Component;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component
+@DisallowConcurrentExecution
 public class EmployeeCsvExtractJob implements Job {
     private static final Logger log = LoggerFactory.getLogger(EmployeeCsvExtractJob.class);
     private final EmployeeExtractService employeeExtractService;

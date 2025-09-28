@@ -3,7 +3,7 @@
 #   docker build -f .docker/Dockerfile.Test -t platform-scheduler-test .
 #   docker run --rm platform-scheduler-test
 
-ARG MAVEN_IMAGE=maven:3.9.9-eclipse-temurin-21`
+ARG MAVEN_IMAGE=maven:3.9.9-eclipse-temurin-21
 FROM ${MAVEN_IMAGE} AS test-runner
 WORKDIR /workspace
 

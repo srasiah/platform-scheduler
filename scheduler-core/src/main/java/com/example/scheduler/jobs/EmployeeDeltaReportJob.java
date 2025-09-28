@@ -5,6 +5,7 @@ import com.example.employee.entity.EmployeeDelta;
 import com.example.employee.entity.EmployeeIngestBatch;
 import com.example.employee.service.EmployeeDeltaService;
 import com.example.common.util.CsvUtils;
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
  * Quartz job to generate delta reports and export them as CSV files.
  */
 @Component
+@DisallowConcurrentExecution
 public class EmployeeDeltaReportJob implements Job {
     
     private static final Logger log = LoggerFactory.getLogger(EmployeeDeltaReportJob.class);

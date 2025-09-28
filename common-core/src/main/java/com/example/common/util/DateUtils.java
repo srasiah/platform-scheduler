@@ -14,21 +14,42 @@ public class DateUtils {
     private static final Logger log = LoggerFactory.getLogger(DateUtils.class);
     
     /**
-     * Common date formats supported for parsing.
+     * Thread-local SimpleDateFormat instances to ensure thread safety.
+     * SimpleDateFormat is not thread-safe, so we use ThreadLocal to provide
+     * separate instances per thread.
      */
-    private static final SimpleDateFormat[] COMMON_DATE_FORMATS = {
-        new SimpleDateFormat("yyyy-MM-dd"),    // ISO format: 1990-05-15
-        new SimpleDateFormat("MM/dd/yyyy"),    // US format: 05/15/1990  
-        new SimpleDateFormat("M/d/yyyy"),      // US format with single digits: 5/15/1990
-        new SimpleDateFormat("dd/MM/yyyy"),    // European format: 15/05/1990
-        new SimpleDateFormat("d/M/yyyy"),      // European format with single digits: 15/5/1990
-        new SimpleDateFormat("yyyy/MM/dd"),    // Alternative format: 1990/05/15
-        new SimpleDateFormat("yyyy/M/d"),      // Alternative format with single digits: 1990/5/15
-        new SimpleDateFormat("dd-MM-yyyy"),    // Dash European: 15-05-1990
-        new SimpleDateFormat("d-M-yyyy"),      // Dash European with single digits: 15-5-1990
-        new SimpleDateFormat("MM-dd-yyyy"),    // Dash US: 05-15-1990
-        new SimpleDateFormat("M-d-yyyy")       // Dash US with single digits: 5-15-1990
-    };
+    private static final ThreadLocal<SimpleDateFormat[]> THREAD_LOCAL_DATE_FORMATS = 
+        ThreadLocal.withInitial(() -> {
+            SimpleDateFormat[] formats = new SimpleDateFormat[] {
+                new SimpleDateFormat("yyyy-MM-dd"),    // ISO format: 1990-05-15
+                new SimpleDateFormat("MM/dd/yyyy"),    // US format: 05/15/1990  
+                new SimpleDateFormat("M/d/yyyy"),      // US format with single digits: 5/15/1990
+                new SimpleDateFormat("dd/MM/yyyy"),    // European format: 15/05/1990
+                new SimpleDateFormat("d/M/yyyy"),      // European format with single digits: 15/5/1990
+                new SimpleDateFormat("yyyy/MM/dd"),    // Alternative format: 1990/05/15
+                new SimpleDateFormat("yyyy/M/d"),      // Alternative format with single digits: 1990/5/15
+                new SimpleDateFormat("dd-MM-yyyy"),    // Dash European: 15-05-1990
+                new SimpleDateFormat("d-M-yyyy"),      // Dash European with single digits: 15-5-1990
+                new SimpleDateFormat("MM-dd-yyyy"),    // Dash US: 05-15-1990
+                new SimpleDateFormat("M-d-yyyy")       // Dash US with single digits: 5-15-1990
+            };
+            
+            // Set strict parsing for all formatters
+            for (SimpleDateFormat formatter : formats) {
+                formatter.setLenient(false);
+            }
+            
+            return formats;
+        });
+    
+    /**
+     * Gets the thread-safe date format instances for the current thread.
+     * 
+     * @return array of SimpleDateFormat instances for this thread
+     */
+    private static SimpleDateFormat[] getDateFormats() {
+        return THREAD_LOCAL_DATE_FORMATS.get();
+    }
     
     /**
      * Parses a date string using multiple common date formats.
@@ -43,7 +64,7 @@ public class DateUtils {
         
         String trimmedValue = dateValue.trim();
         
-        for (SimpleDateFormat formatter : COMMON_DATE_FORMATS) {
+        for (SimpleDateFormat formatter : getDateFormats()) {
             try {
                 return formatter.parse(trimmedValue);
             } catch (ParseException pe) {
@@ -192,9 +213,10 @@ public class DateUtils {
      * @return array of supported date format patterns
      */
     public static String[] getSupportedDatePatterns() {
-        String[] patterns = new String[COMMON_DATE_FORMATS.length];
-        for (int i = 0; i < COMMON_DATE_FORMATS.length; i++) {
-            patterns[i] = COMMON_DATE_FORMATS[i].toPattern();
+        SimpleDateFormat[] dateFormats = getDateFormats();
+        String[] patterns = new String[dateFormats.length];
+        for (int i = 0; i < dateFormats.length; i++) {
+            patterns[i] = dateFormats[i].toPattern();
         }
         return patterns;
     }

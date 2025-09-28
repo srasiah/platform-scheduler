@@ -126,6 +126,83 @@ curl http://localhost:8080/api/jobs/{jobId}/history
 
 ---
 
+## Testing
+
+The platform provides comprehensive testing capabilities with multiple approaches:
+
+### Quick Test Commands
+
+```bash
+# Run all tests across all modules (93 tests total)
+make test
+
+# Run tests in Docker environment
+make test-docker
+
+# Test compilation only (quick build verification)
+make compile
+
+# Run thread safety tests (DateUtils focus)
+make test-threading
+
+# Run specific module tests
+make test-employee-core        # Employee module only
+mvn test -Dtest=DateUtilsTest  # Date utilities only
+```
+
+### Test Categories
+
+#### 🧪 **Unit Tests (93 total)**
+- **Common Core**: 63 tests covering date utilities, validation, and core functionality
+- **Employee Core**: 30 tests covering CSV processing, data validation, and business logic
+- **Thread Safety**: Comprehensive testing of concurrent operations with ThreadLocal patterns
+
+#### 🐳 **Docker-Based Testing**
+```bash
+# Full test suite in containerized environment
+make test-docker
+
+# Compilation verification in Docker
+make test-docker-compile
+
+# Custom Docker testing
+docker run --rm -v "$(pwd):/workspace" -w /workspace \
+  maven:3.9.9-eclipse-temurin-21 mvn test
+```
+
+#### 🔒 **Thread Safety Validation**
+- **SimpleDateFormat**: ThreadLocal implementation prevents race conditions
+- **Quartz Jobs**: `@DisallowConcurrentExecution` prevents overlapping executions
+- **Multi-threading**: Stress tests validate concurrent operations
+
+### Test Reports & Coverage
+
+```bash
+# Generate detailed test reports
+mvn surefire-report:report
+
+# View test results
+open target/site/surefire-report.html
+
+# Maven test with detailed output
+mvn test -Dtest=* --batch-mode
+```
+
+### Testing Best Practices
+
+1. **Development Workflow**: Run `make test-threading` after DateUtils changes
+2. **CI/CD Integration**: All tests run automatically in GitHub Actions
+3. **Docker Validation**: Use `make test-docker` to verify containerized deployments
+4. **Quick Verification**: Use `make compile` for rapid build checks
+
+### Troubleshooting Tests
+
+- **Docker Issues**: Ensure Docker daemon is running for containerized tests
+- **Thread Safety**: All SimpleDateFormat instances use ThreadLocal pattern
+- **Database Tests**: Use in-memory H2 for unit tests, PostgreSQL for integration
+
+---
+
 ## Employee Extract/Ingest
 
 - **Extract:**

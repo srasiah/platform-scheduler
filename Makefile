@@ -15,7 +15,7 @@ PORT ?= 8080
 BUILD_ARGS ?=
 RUN_ARGS ?=
 
-.PHONY: docker-build compose-build run run-d app-only logs stop stop-v ps db-shell app-shell push mvn clean docker-prune docker-rm-all test test-employee-core db-only test-docker test-docker-compile test-docker-build list-images tag-latest show-env
+.PHONY: docker-build compose-build run run-d app-only logs stop stop-v ps db-shell app-shell push mvn clean docker-prune docker-rm-all test compile test-threading test-employee-core db-only test-docker test-docker-compile test-docker-build list-images tag-latest show-env
 
 # Build only the app image (no DB), using Dockerfile in docker/
 docker-build:
@@ -97,9 +97,19 @@ docker-rm-all:
 test:
 	mvn test
 
+# Quick compilation check without running tests  
+compile:
+	@echo "🔨 Quick compilation check..."
+	mvn clean compile -q
+
 # Run only employee-core unit tests
 test-employee-core:
 	mvn -pl employee-core test
+
+# Run multi-threading focused tests (after recent thread safety fixes)
+test-threading:
+	@echo "🧵 Running thread safety tests..."
+	mvn test -Dtest="DateUtilsTest" -pl common-core
 
 # Build the test Docker image
 test-docker-build:

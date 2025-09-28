@@ -40,3 +40,25 @@ build/
 ### Env
 .env
 *.log
+*.gz
+*.zip
+*.tar
+*.tar.gz
+*.out
+*.tmp
+*.swp
+./logs/
+./.idea/
+./.vscode/
+./target/
+./build/
+./dist/
+./.DS_Store
+./.env
+./.mvn/wrapper/maven-wrapper.jar
+./nbproject/private/
+./.nb-gradle/
+./.settings/
+./.factorypath
+./.apt_generated
+./.classpath        
