@@ -45,21 +45,52 @@ open http://localhost:8080/swagger-ui
 
 ---
 
-### Podman Users: Required Setup
+### Container Engine Support (Docker/Podman)
 
-If you use Podman instead of Docker, you must:
+The Makefile automatically detects and supports both Docker and Podman:
 
-1. **Install podman-compose**
-  ```bash
-  sudo apt update
-  sudo apt install podman-compose
-  ```
-2. **Configure image registry resolution**
-  Edit `/etc/containers/registries.conf` and set:
-  ```toml
-  unqualified-search-registries = ["docker.io"]
-  ```
-  This allows Podman to pull images like `postgres:16.3` and `maven:3.9.9-eclipse-temurin-17` from Docker Hub.
+```bash
+# Check which container engine is detected
+make check-container-engine
+
+# View current configuration  
+make show-env
+```
+
+**For Podman users:** The Makefile will automatically:
+- Detect if `podman` or `podman-compose` is available
+- Use appropriate build commands (`BUILDAH_FORMAT=docker`)
+- Handle registry configuration differences
+
+#### Podman Setup Requirements
+
+1. **Install podman-compose** (recommended):
+   ```bash
+   # Ubuntu/Debian
+   sudo apt update && sudo apt install podman-compose
+   
+   # macOS (via Homebrew)
+   brew install podman-compose
+   
+   # Or use pip
+   pip install podman-compose
+   ```
+
+2. **Configure image registry resolution:**
+   Edit `/etc/containers/registries.conf`:
+   ```toml
+   unqualified-search-registries = ["docker.io"]
+   ```
+   This allows Podman to pull images like `postgres:16.3` and `maven:3.9.9-eclipse-temurin-17` from Docker Hub.
+
+3. **Verify setup:**
+   ```bash
+   make check-container-engine
+   # OR get detailed setup guide:
+   make setup-podman
+   ```
+
+**All existing commands work identically** with both Docker and Podman - no syntax changes needed!
 
 ---
 
@@ -229,27 +260,42 @@ See `SmokeTest.md` for a step-by-step validation guide.
 
 ## Makefile Usage
 
+**🐳 Container Engine Auto-Detection:** The Makefile automatically detects and works with both Docker and Podman!
 
 Common development commands (run from repo root):
 
 ```bash
-make run           # Start app + db (Docker or Podman Compose)
+# Container management
+make run           # Start app + db (auto-detects Docker/Podman)
 make run-d         # Start app + db in detached mode
 make stop          # Stop and remove containers
 make stop-v        # Stop and remove containers + volumes
 make clean         # Remove containers, volumes, and app image
-make docker-prune  # Remove all dangling/unused images
+
+# Container engine utilities
+make check-container-engine  # Check which engine is detected
+make show-env               # Show all configuration details
+make docker-prune          # Remove all dangling/unused images
 make docker-rm-all # DANGER: Remove ALL containers and images (use with caution)
 make app-only      # Run only the app container (useful if pointing at external DB)
 make db-only       # Run only the db container (useful for local dev)
 make logs          # Tail app logs
 make db-shell      # Open psql shell to database
 make app-shell     # Open shell in app container
+
+# Testing commands
 make test          # Run all unit tests
 make test-employee-core # Run only employee-core unit tests
+make test-docker   # Run tests in containerized environment
+make compile       # Quick compilation check
 ```
 
-> **Note:** The Makefile auto-detects Podman or Docker. For Podman Compose, ensure `podman-compose` is installed and registry config is set as above.
+> **✨ New in this version:** 
+> - **Universal compatibility**: Works seamlessly with Docker or Podman
+> - **Auto-detection**: No configuration changes needed when switching engines
+> - **Podman optimizations**: Proper `BUILDAH_FORMAT=docker` and compose command handling
+
+> **Note:** The Makefile automatically detects your container engine. Run `make check-container-engine` to see what's detected and get setup tips for Podman.
 
 See the `Makefile` for more details and advanced options.
 
